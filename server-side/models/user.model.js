@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     type: String, 
     // to restrict roles to either customer or owner if null then guest or err
     enum: ["customer", "owner"], 
-    required: true 
+    required: false 
   },
   restaurantName: { type: String }, // optional for non-owners req for owners
   address: { type: String }, // optional for non-owners req for owners
@@ -17,4 +17,4 @@ const userSchema = new mongoose.Schema({
   ]
 }, { timestamps: true });
 
-export default mongoose.model("User", userSchema); // "User" is the model name
+export default userSchema; // "User" is the model name

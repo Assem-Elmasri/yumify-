@@ -18,4 +18,4 @@ const orderSchema = new mongoose.Schema({
   deliveryAddress: { type: String, required: true },
 }, { timestamps: true });
 
-export default mongoose.model("Order", orderSchema);
+export default orderSchema;

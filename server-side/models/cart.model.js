@@ -1,3 +1,6 @@
+import mongoose from "mongoose";
+
+
 const cartSchema = new mongoose.Schema({
   customer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   items: [
@@ -7,3 +10,5 @@ const cartSchema = new mongoose.Schema({
     }
   ]
 }, { timestamps: true });
+
+export default cartSchema;
