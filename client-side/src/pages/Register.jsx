@@ -1,115 +1,120 @@
-// src/Components/Register.jsx
-import React from "react";
-import "@fontsource/cormorant-garamond"; // Elegant title font
-import "@fontsource/dm-sans"; // Clean body font
+import React, { useState } from "react";
+import Logo from "../components/logo";
+import Button from "../components/Button";
+import SmartRestaurant from "../components/SmartRestaurant";
+import { Link } from "react-router-dom";
 
-const Register = () => {
+// prettier-ignore
+const Register = ({backgroundColor = "bg-[linear-gradient(135deg,#f0f2f5_0%,#e0e5ec_100%)]"}) => {
+  const[fullName,setFullName]=useState("");
+  const[regEmail,setRegEmail]=useState("");
+  const[createPassword,setCreatePassword]=useState("");
+  const[confirmPassword,setConfirmPassword]=useState("");
+  const [role, setRole] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const handleSubmit=(e)=>{
+
+e.preventDefault();
+  const formData = {
+    fullName,
+    regEmail,
+    createPassword,
+    confirmPassword,
+    role,
+    termsAccepted,
+  };
+
+  console.log("Form submitted:", formData);
+
+  }
   return (
-    <div className="relative w-screen h-screen flex items-center justify-center overflow-hidden text-white font-[DM_Sans]">
-      {/* 🔹 Background video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute top-1/2 left-1/2 w-full h-full object-cover -translate-x-1/2 -translate-y-1/2 z-[1] brightness-[0.35] contrast-[1.1] saturate-[1.2]"
-      >
-        <source src="/Samsung_Style_Food_Commercial_Video.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-
-      {/* 🔹 Golden overlay for warmth */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70 z-[1]" />
-
-      {/* 🔹 Glassmorphic card */}
-      <div
-        className="relative z-[2] w-[90%] max-w-md p-10 rounded-2xl border border-[#d4af37]/30 
-                   bg-white/10 backdrop-blur-2xl shadow-[0_0_40px_rgba(0,0,0,0.5)]
-                   animate-fade-in-up transition-all duration-700"
-      >
-        {/* 🔹 Soft glowing border */}
-        <div className="absolute -inset-[1px] rounded-2xl bg-gradient-to-tr from-[#b87333]/40 via-[#d4af37]/20 to-transparent blur-2xl opacity-70" />
-
-        {/* 🔹 Title */}
-        <h1
-          className="relative mb-8 text-4xl font-[Cormorant_Garamond] font-extrabold text-center 
-                     tracking-wider text-transparent bg-clip-text 
-                     bg-gradient-to-r from-[#d4af37] via-[#ffcc70] to-[#f9d976]
-                     drop-shadow-[0_0_12px_rgba(0,0,0,0.6)]"
+    <>
+      <div className={`login-body flex justify-center items-center min-h-[100vh] ${backgroundColor}`}>
+        <div
+          className={`login-container  bg-blur-[10px] rounded-[20px] shadow-[0_10px_30px_rgba(0,_0,_0,_0.1)] flex max-w-[900px] w-[90%] overflow-hidden min-height-[500px] max-md:flex-col max-w-[400px] min-h-[0]`}
         >
-          Create Account
-        </h1>
 
-        {/* 🔹 Form */}
-        <form className="relative flex flex-col gap-4 text-base tracking-wide">
-          <input
-            type="text"
-            placeholder="Full Name"
-            required
-            className="w-full px-5 py-3 rounded-lg border border-[#d4af37]/30 bg-white/10 text-white
-                       placeholder-white/70 outline-none
-                       focus:border-[#d4af37] focus:bg-white/15 
-                       focus:shadow-[0_0_12px_rgba(212,175,55,0.4)]
-                       transition-all duration-300"
-          />
-          <input
-            type="email"
-            placeholder="Email Address"
-            required
-            className="w-full px-5 py-3 rounded-lg border border-[#d4af37]/30 bg-white/10 text-white
-                       placeholder-white/70 outline-none
-                       focus:border-[#d4af37] focus:bg-white/15 
-                       focus:shadow-[0_0_12px_rgba(212,175,55,0.4)]
-                       transition-all duration-300"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            required
-            className="w-full px-5 py-3 rounded-lg border border-[#d4af37]/30 bg-white/10 text-white
-                       placeholder-white/70 outline-none
-                       focus:border-[#d4af37] focus:bg-white/15 
-                       focus:shadow-[0_0_12px_rgba(212,175,55,0.4)]
-                       transition-all duration-300"
-          />
+          {/* login card container */}
 
-          {/* 🔹 Button */}
-          <button
-            type="submit"
-            className="w-full py-3 mt-2 rounded-lg 
-                       bg-gradient-to-r from-[#b87333] via-[#d4af37] to-[#f9d976]
-                       text-black text-lg font-semibold tracking-wide
-                       shadow-[0_0_20px_rgba(212,175,55,0.3)]
-                       hover:scale-[1.04] hover:shadow-[0_0_35px_rgba(212,175,55,0.5)]
-                       transition-all duration-300"
-          >
-            Register
-          </button>
-        </form>
+          <div className="login-form-section  bg-[#FBFCFD] flex-1 p-[10px] flex-col justify-center items-center text-center  max-md:p-[30px] max-md: min-h-[80%]">
+            <Logo logoSize="text-[35px]"/>
+            <SmartRestaurant textSize="text-[15px]"/>
+            <h1 className="text-[25px] font-[600] m-[20px_5px_15px_5px]">
+              Create Your Acounte!
+            </h1>
+            <div className=" w-[100%] flex flex-col gap-[5px] justify-center ">
 
-        {/* 🔹 Login link */}
-        <p className="mt-6 text-sm text-center text-white/90 relative">
-          Already have an account?{" "}
-          <a
-            href="/login"
-            className="text-[#d4af37] font-semibold hover:text-[#f9d976] hover:underline transition-colors duration-200"
-          >
-            Log In
-          </a>
-        </p>
+              {/* the form creation */}
+
+              <form  onSubmit={handleSubmit} action="" className="flex flex-col gap-[15px] items-center p-[0px_35px]">
+
+                <input
+                className="p-[12px] rounded-[8px] border-[2px] border-[#E0E0E0] w-[100%]" type="text" placeholder="Full Name"
+                name="fullName"
+                value={fullName}
+                onChange={(e)=>setFullName(e.target.value)}
+                />
+                
+                <input 
+                className="p-[12px] rounded-[8px] border-[2px] border-[#E0E0E0] w-[100%]" type="email" placeholder="Email"
+                name="regEmail"
+                value={regEmail}
+                onChange={(e)=>setRegEmail(e.target.value)}
+                />
+                
+                <input
+                className="p-[12px] rounded-[8px] border-[2px] border-[#E0E0E0] w-[100%]" type="password" placeholder="Password"
+                name="createPassword"
+                value={createPassword}
+                onChange={(e)=>setCreatePassword(e.target.value)}
+                />
+                
+                <input
+                className="p-[12px] rounded-[8px] border-[2px] border-[#E0E0E0] w-[100%]" type="password" placeholder="Confirm Password"
+                name="confirmPassword"
+                value={confirmPassword}
+                onChange={(e)=>setConfirmPassword(e.target.value)}
+                />
+                
+                      <select 
+                       className="select-field p-[12px] rounded-[8px] border-[2px] border-[#E0E0E0] w-[100%]" required
+                       name="role"
+                       value={role}
+                       onChange={(e)=>setRole(e.target.value)}
+                       >
+                        <option value="" disabled >Select Role</option>
+                        <option value="customer">Customer</option>
+                        <option value="supplier">Supplier</option>
+                        <option value="admin">Admin</option>
+                    </select>
+
+                      <div className="checkbox-container flex items-center justify-center mt-[5px] mb-[5px]">
+                        <input 
+                        className="mr-[5px]" type="checkbox" id="terms" required
+                        checked={termsAccepted}
+                        onChange={(e)=>setTermsAccepted(e.target.checked)}
+                        />
+                        <label htmlFor="terms" className="text-sm text-gray-700">I agree to the <Link href="#" className="text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">terms and conditions</Link></label>
+                    </div>
+                <Button buttonText={"Create Acount"}/>
+              </form>
+
+
+              {/* prettier-ignore */}
+              <div className="p-[10px]"><span className="pr-[5px]">Already have an account?</span><Link to="" className="font-[500] text-[#FF784E] no-underline hover:underline transform hover:text-red-500 transition duration-300 ease">Login</Link></div>
+            </div>
+          </div>
+
+          {/* img container */}
+          {/* prettier-ignore */}
+          <div className="max-md:  rounded-tl-[0px] rounded-tr-[0px] rounded-bl-[0] md:flex-1 overflow-hidden bg-[linear-gradient(135deg,#FF7043_0%,#FFCCBB_100%)] flex justify-center items-center  relative max-md:max-h-[100px] md:max-h-none">
+            <img className="custom-img-animation max-w-[100%] h-[100%] animate-[rightToLeft_0.9s_ease-out_forwards max-md:hidden" src="/berger.png" alt="" />
+            <img className="custom-img-animation max-w-[100%] h-[100%] animate-[rightToLeft_0.9s_ease-out_forwards md:hidden w-[100%] h-[600px]" src="/berger650.png" alt="" />
+          </div>
+        </div>
       </div>
-
-      {/* 🔹 Animation */}
-      <style>{`
-        @keyframes fade-in-up {
-          0% { opacity: 0; transform: translateY(25px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 0.9s ease-out both;
-        }
-      `}</style>
-    </div>
+    </>
   );
 };
 
