@@ -7,6 +7,7 @@ const userAPI = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true, // Include cookies in requests
 });
 
 export default userAPI;

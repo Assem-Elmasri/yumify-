@@ -5,9 +5,7 @@ const BASE_URL = "http://localhost:5000/api/foods/";
 
 const foodAPI = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  withCredentials: true, // Include cookies in requests
 });
 
 export default foodAPI;

@@ -1,6 +1,7 @@
 import e from "express";
 import mongoose from "mongoose";
 import foodSchema from "../models/food.model.js";
+import upload from "../middlewares/upload.middleware.js";
 
 const router = e.Router();
 
@@ -21,8 +22,10 @@ router.get("/", async (req, res) => {
 
 
 // Route to add a new food by an owner
-router.post("/add", async (req, res) => {
-    const { name, description, price, category, imageUrl } = req.body;
+router.post("/add", upload.single('image') ,async (req, res) => {
+    const { name, description, price, category } = req.body;
+    const imageUrl = req.file ? req.file.filename : null;
+    console.log("Received new food data:", req.body, "Image file:", req.file);
     try {
         const newFood = new Food({ name, description, price, category, imageUrl });
         await newFood.save();
@@ -63,5 +66,38 @@ router.delete("/:foodId", async (req, res) => {
         res.status(500).json({ message: "Server error", error: error.message }); // Handle server errors
     }
 });
+
+router.get("/search", async (req, res) => {
+  try {
+    let query = req.query.q; // ✅ جلب قيمة q من الـ URL
+
+    console.log("my query is:", query);
+
+    // ✅ لو مفيش query أو مش string → رجّع كل الأكلات
+    if (!query || typeof query !== "string" || query.trim() === "") {
+      const foods = await Food.find();
+      return res.json(foods);
+    }
+
+    query = query.trim();
+
+    // ✅ البحث في أكتر من حقل
+    const results = await Food.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { category: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ],
+    });
+
+    res.json(results);
+  } catch (error) {
+    console.error("Error in GET /search (food.route):", error);
+    res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
+  }
+});
+
 
 export default router;
