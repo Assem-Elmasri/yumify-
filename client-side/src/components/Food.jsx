@@ -1,8 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router";
+
 
 const Food = ({foodObj}) => {
+
+  const navigator = useNavigate()
   return (
-    <div className="food-card rounded-2xl shadow-lg transition-transform hover:translate-y-[-5px] hover:shadow-xl">
+    <div onClick={()=>navigator(`/${foodObj._id}`)} className="food-card rounded-2xl shadow-lg transition-transform hover:translate-y-[-5px] hover:shadow-xl">
       <img
         className="w-full h-56 object-cover rounded-t-2xl"
         src={`http://localhost:5000/${foodObj.imageUrl}`}

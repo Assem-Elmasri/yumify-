@@ -1,36 +1,46 @@
 import { useEffect, useState } from "react";
 import foodAPI from "../apis/food.api";
 import Food from "../components/Food.jsx";
+import userAPI from "../apis/user.api.js";
+import { useNavigate } from "react-router";
 
 const Home = () => {
   const [sideBarOpened, setSideBarOpened] = useState(false); // false means closed, true means opened
+  const [userData, setUserData] = useState(null);
   const [cartOpened, setCartOpened] = useState(false); // false means closed, true means opened
   const [foods, setFoods] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const navigator = useNavigate()
 
-useEffect(() => {
-  const delayDebounce = setTimeout(() => {
-    if (searchTerm.trim() === "") {
-      foodAPI.get("/").then((response) => {
-        setFoods(response.data);
-      }).catch(err => {
-        console.log(err);
-      });
-    } else {
-      foodAPI.get(`/search?q=${searchTerm.trim()}`)
-        .then((response) => {
-          setFoods(response.data);
-        })
-        .catch(err => {
-          console.log(err);
-        });
-    }
-  }, 500);
+  useEffect(() => {
+    userAPI.get("/profile").then((res) => setUserData(res.data));
+  }, []);
+  useEffect(() => {
+    const delayDebounce = setTimeout(() => {
+      if (searchTerm.trim() === "") {
+        foodAPI
+          .get("/")
+          .then((response) => {
+            setFoods(response.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      } else {
+        foodAPI
+          .get(`/search?q=${searchTerm.trim()}`)
+          .then((response) => {
+            setFoods(response.data);
+          })
+          .catch((err) => {
+            console.log(err);
+          });
+      }
+    }, 500);
 
-  return () => clearTimeout(delayDebounce);
-}, [searchTerm]);
-
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm]);
 
   return (
     <>
@@ -120,7 +130,12 @@ useEffect(() => {
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                 ></path>
               </svg>{" "}
-              <span>Logout</span>
+              <span onClick={()=>{
+                userAPI.post("/logout").then(()=>{
+                  navigator('/login')
+                })
+
+              }}>Logout</span>
             </a>
           </div>
         </aside>
@@ -174,26 +189,35 @@ useEffect(() => {
               </svg>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 rounded-full text-gray-700 hover:bg-gray-200">
+              {userData ? (
+                <button
+                  onClick={() => navigator("/profile")}
+                  className="p-2 w-14 h-14 rounded-full text-gray-700 hover:bg-gray-200"
+                >
+                  <div>
+                    <img
+                      src={`http://localhost:5000/uploads/users/${userData.imageUrl}`}
+                      alt="Profile Pic"
+                      className="rounded-full"
+                    />
+                  </div>
+                </button>
+              ) : (
                 <svg
                   className="w-6 h-6"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
                 >
+                  {" "}
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth="2"
                     d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                  ></path>
+                  ></path>{" "}
                 </svg>
-              </button>
-              <img
-                src="https://i.pravatar.cc/150?u=a042581f4e29026704d"
-                alt="User Avatar"
-                className="w-10 h-10 rounded-full"
-              />
+              )}
             </div>
           </header>
 
@@ -202,38 +226,38 @@ useEffect(() => {
             <section className="mb-8">
               <div className="flex items-center space-x-6 sm:space-x-10 border-b border-gray-200">
                 <span
-                  onClick={()=>setSelectedCategory('all')}
+                  onClick={() => setSelectedCategory("all")}
                   className="menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors active"
                 >
                   All
                 </span>
                 <span
-                onClick={()=>setSelectedCategory('Starter')}
+                  onClick={() => setSelectedCategory("Starter")}
                   className="menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors"
                 >
                   Starters
                 </span>
                 <span
-                  onClick={()=>setSelectedCategory('MainDish')}
+                  onClick={() => setSelectedCategory("MainDish")}
                   className="menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors"
                 >
                   Main Dishes
                 </span>
                 <span
-                  onClick={()=>setSelectedCategory('Appetizer')}
+                  onClick={() => setSelectedCategory("Appetizer")}
                   className="menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors"
                 >
                   Appetizers
                 </span>
                 <span
-                  onClick={()=>setSelectedCategory('Dessert')}
+                  onClick={() => setSelectedCategory("Dessert")}
                   className="menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors"
                 >
                   Desserts
                 </span>
                 <span
                   className="menu-category-tab font-tabs py-3 text-lg cursor-pointer text-gray-500 hover:text-orange-500 transition-colors"
-                  onClick={()=>setSelectedCategory('Drink')}
+                  onClick={() => setSelectedCategory("Drink")}
                 >
                   Drinks
                 </span>
@@ -246,10 +270,15 @@ useEffect(() => {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
             >
               {/* Menu items */}
-              {
-                foods.filter(food=> selectedCategory === 'all' ? true : food.category === selectedCategory)
-                .map((food)=><Food key={food._id} foodObj={food} />)
-              }
+              {foods
+                .filter((food) =>
+                  selectedCategory === "all"
+                    ? true
+                    : food.category === selectedCategory
+                )
+                .map((food) => (
+                  <Food key={food._id} foodObj={food} />
+                ))}
             </div>
             <div
               id="empty-category-message"
@@ -265,7 +294,7 @@ useEffect(() => {
       {/* Floating Cart & Drawer  */}
       <div
         id="floating-cart-button"
-        onClick={()=>setCartOpened(true)}
+        onClick={() => setCartOpened(true)}
         className="fixed bottom-8 right-8 bg-slate-800 rounded-full shadow-lg cursor-pointer p-4 transition-transform hover:scale-110"
       >
         <svg
@@ -290,12 +319,21 @@ useEffect(() => {
       </div>
       <div
         id="overlay"
-        className={`overlay fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ease-in-out ${cartOpened || sideBarOpened ? "opacity-100 visible" : "opacity-0 invisible"}`}
-        onClick={() => {setCartOpened(false);setSideBarOpened(false)} }
+        className={`overlay fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300 ease-in-out ${
+          cartOpened || sideBarOpened
+            ? "opacity-100 visible"
+            : "opacity-0 invisible"
+        }`}
+        onClick={() => {
+          setCartOpened(false);
+          setSideBarOpened(false);
+        }}
       ></div>
       <div
         id="mini-cart-drawer"
-        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-lg z-50 flex flex-col transform ${cartOpened ? "translate-x-0" : "translate-x-full"} transition-transform duration-300 ease-in-out`}
+        className={`fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-lg z-50 flex flex-col transform ${
+          cartOpened ? "translate-x-0" : "translate-x-full"
+        } transition-transform duration-300 ease-in-out`}
       >
         <div className="flex justify-between items-center p-5 border-b">
           <h2 className="text-xl font-bold text-slate-800">Your Order</h2>

@@ -20,6 +20,12 @@ const foodSchema = new mongoose.Schema(
       ref: "Restaurant",
       required: false, // set to false to allow test data without restaurant
     },
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
   },
   { timestamps: true }
 );

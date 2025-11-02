@@ -1,8 +1,27 @@
 import {Eye,EyeClosed} from 'lucide-react'
 import { useState } from 'react';
+import userAPI from '../apis/user.api'
+import { useEffect } from 'react';
+import ThemeToggleBtn from '../components/ThemeToggleBtn';
+
+
 
 const Profile = () => {
+  const [pass,setPass] = useState('')
+  const [newPass,setNewPass]= useState('')
+  const [reNewPass,setNewRePass] = useState('')
   const [passwordShowen,setPasswordShowen] = useState(false)
+  const [passwordRepeatShowen,setPasswordRepeatShowen] = useState(false)
+  const [image,setImage] = useState(null)
+  const profileForm = new FormData()
+  const [userData,setUserData] = useState(null)
+  const [errorMsg,setErrorMsg] = useState('') //should be 'short' or 'diff'
+useEffect(()=>{
+  userAPI.get('/profile').then((res)=>{
+    if(res.data) setUserData(res.data)
+    else console.log('user data doesnt return')
+  })
+},[])
   return (
     // Wrapper
     <main className="flex flex-col items-center justify-center min-h-screen p-4 md:p-8 bg-gray-100">
@@ -20,9 +39,9 @@ const Profile = () => {
             <div className="flex-shrink-0">
               <img
                 id="profile-img"
-                src="https://placehold.co/128x128/E5E5E5/999999?text=Upload"
+                src={userData?`http://localhost:5000/uploads/users/${userData.imageUrl}`:"https://placehold.co/128x128/E5E5E5/999999?text=Upload"}
                 className="w-32 h-32 rounded-full object-cover border-4 border-gray-100"
-                alt="Profile Picture"
+                alt="Profile ALT Picture"
               />
               <label
                 htmlFor="profile-upload"
@@ -33,8 +52,13 @@ const Profile = () => {
               <input
                 type="file"
                 id="profile-upload"
+                onChange={(e)=>setImage(e.target.files[0])}
                 className="hidden"
                 accept="image/*"
+                onClick={()=>{
+                  profileForm.append("profile",image)
+                  userAPI.put('/addUserProfile',profileForm)
+                }}
               />
             </div>
             <div className="w-full space-y-4">
@@ -49,7 +73,8 @@ const Profile = () => {
                   <input
                     type="text"
                     id="full-name"
-                    defaultValue="Jane Doe"
+                    readOnly
+                    value={userData?userData.name:'default name'}
                     className="w-full p-3 rounded-md form-input border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
                   />
                 </div>
@@ -63,7 +88,8 @@ const Profile = () => {
                   <input
                     type="email"
                     id="email"
-                    defaultValue="jane.doe@example.com"
+                    value={userData?userData.email:'example@provider.com'}
+                    readOnly
                     className="w-full p-3 rounded-md form-input border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
                   />
                 </div>
@@ -78,7 +104,8 @@ const Profile = () => {
                 <input
                   type="tel"
                   id="phone"
-                  defaultValue="+1 (555) 123-4567"
+                  value={userData?userData.phone:"Phone number isn't provided"}
+                  readOnly
                   className="w-full p-3 rounded-md form-input border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
                 />
               </div>
@@ -98,15 +125,17 @@ const Profile = () => {
             <input
               type={`${!passwordShowen?'password':'text'}`}
               id="current-password"
+              value={pass}
+              onChange={(e)=>setPass(e.target.value)}
               className="w-full p-3 rounded-md form-input border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
             />
             <button
               type="button"
-              className="absolute right-3 top-9 text-sub"
+              className="absolute right-3 top-9 text-sub text-center"
               onClick={()=>setPasswordShowen(!passwordShowen)}
             > 
-              <Eye className='w-5 h-5 icon-eye text-gray-400 '   />
-              <EyeClosed className='w-5 h-5 icon-eye-off hidden' />
+              <Eye className={`w-5 h-5 icon-eye text-gray-400 ${!passwordShowen?'':'hidden'}`}   />
+              <EyeClosed className={`w-5 h-5 icon-eye text-gray-400 ${passwordShowen?'':'hidden'}`} />
             </button>
           </div>
           <div className="relative">
@@ -115,23 +144,25 @@ const Profile = () => {
               className="block text-sm font-medium text-sub mb-1 text-gray-400"
               >New Password</label>
             <input
-              type="password"
+              type={!passwordRepeatShowen?"password":'text'}
               id="new-password"
-              className="w-full p-3 rounded-md form-input border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
+              value={newPass}
+              onChange={(e)=>{setNewPass(e.target.value)}}
+              className="w-full p-3 rounded-md border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
               aria-describedby="password-help"
             />
             <button
               type="button"
               className="absolute right-3 top-9 text-sub"
-              onClick={()=>{}}
+              onClick={()=>{setPasswordRepeatShowen(!passwordRepeatShowen)}}
             >
-              <i data-lucide="eye" className="w-5 h-5 icon-eye"></i>
-              <i data-lucide="eye-off" className="w-5 h-5 icon-eye-off hidden"></i>
+              <Eye className={`w-5 h-5 icon-eye text-gray-400 ${!passwordRepeatShowen?'':'hidden'}`}   />
+              <EyeClosed className={`w-5 h-5 icon-eye text-gray-400 ${passwordRepeatShowen?'':'hidden'}`} />
             </button>
-            <p id="password-help" className="block text-xs font-medium text-sub mb-1 text-gray-400">
+            <p id="password-help" className={`block text-xs font-medium text-sub mb-1 text-gray-400 ${errorMsg === 'short'?'':'hidden'}`}>
               Minimum 8 characters.
             </p>
-            <p id="new-password-error" className="error-message">
+            <p id="new-password-error" className={`block text-xs font-medium text-sub mb-1 text-gray-400 ${errorMsg === 'diff'?'':'hidden'}`}>
               Passwords do not match or are too short.
             </p>
           </div>
@@ -144,6 +175,8 @@ const Profile = () => {
             <input
               type="password"
               id="confirm-password"
+              value={reNewPass}
+              onChange={(e)=>setNewRePass(e.target.value)}
               className="w-full p-3 rounded-md form-input border-2 border-solid border-gray-200 transition-shadow focus:border-orange-400 focus:shadow-sm focus:shadow-orange-400 focus:outline-none"
             />
             <button
@@ -154,14 +187,24 @@ const Profile = () => {
               <i data-lucide="eye" className="w-5 h-5 icon-eye"></i>
               <i data-lucide="eye-off" className="w-5 h-5 icon-eye-off hidden"></i>
             </button>
-            <p id="confirm-password-error" className="error-message">
-              Passwords do not match.
-            </p>
           </div>
           <div className="flex justify-end">
             <button
               type="submit"
               className="px-5 py-2 rounded-md border-2 border-orange-400 text-orange-400 font-semibold hover:bg-orange-100 transition-all duration-300"
+              onClick={(e)=>{
+                e.preventDefault()
+                setErrorMsg('')
+                if(newPass.length<8) {
+                  setErrorMsg('short')
+                  return
+                }
+                if( newPass !== reNewPass){
+                  setErrorMsg('diff')
+                  return
+                }
+                userAPI.put('/updatePassword',{password:pass,newPassword:newPass})
+              }}
             >
               Update Password
             </button>
@@ -169,7 +212,9 @@ const Profile = () => {
         </form>
         </div>
         {/* Card 3 notification prefrences */}
-        <div className="bg-white rounded-lg shadow-soft p-6 md:p-8 border border-[#e5e5e5]">
+        {/* {
+          false  ? 
+          <div className="bg-white rounded-lg shadow-soft p-6 md:p-8 border border-[#e5e5e5]">
           <h2 className="text-xl font-semibold text-main mb-6">
           Notification Preferences
         </h2>
@@ -203,7 +248,9 @@ const Profile = () => {
             />
           </div>
         </div>
-        </div>
+        </div> 
+        : null
+        } */}
       </div>
     </main>
   );

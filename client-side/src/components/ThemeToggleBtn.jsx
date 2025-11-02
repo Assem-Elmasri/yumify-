@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react"; 
 
-export default function ThemeToggleBtn() {
+function ThemeToggleBtn() {
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
   );
@@ -33,3 +33,4 @@ export default function ThemeToggleBtn() {
     </button>
   );
 }
+export default ThemeToggleBtn;

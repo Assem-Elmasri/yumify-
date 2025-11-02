@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
-import { type } from "os";
+
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  imageUrl :{type:String},
   role: { 
     type: String, 
     // to restrict roles to either customer or owner if null then guest or err
@@ -12,7 +13,8 @@ const userSchema = new mongoose.Schema({
     required: true 
   }, // restaurant schema
   restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" ,default: null }, // only for owners
-  address: { type: String , required: true }, // optional for non-owners req for owners
+  address: { type: String  },
+  cart: { type: mongoose.Schema.Types.ObjectId, ref: "Cart", default: null },
   phone : {type:String}
 }, { timestamps: true });
 
