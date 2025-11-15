@@ -19,9 +19,17 @@ export default {
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
       },
-      screens: {
-        "max-md": { max: "768px" }, // Applies styles from 0px up to 767px
-      },
+    },
+    screens: {
+      "max-2xl": { max: "1536px" }, // Large screens
+      "max-xl": { max: "1280px" }, // Desktops
+
+      "max-1170": { max: "1170px" }, // Custom breakpoint between xl and lg
+
+      "max-lg": { max: "1024px" }, // Small laptops
+      "max-md": { max: "768px" }, // Tablets
+      "max-sm": { max: "640px" }, // Small tablets
+      "max-xs": { max: "480px" }, // Phones (smallest → applied LAST)
     },
   },
   plugins: [],
