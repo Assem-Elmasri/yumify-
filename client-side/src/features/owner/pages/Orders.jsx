@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import ownerApi from "../../../api/client.js";
 import OrderCard from "../components/OrderCard.jsx";
+import Pagination from "../components/Pagination.jsx";
+import SkeletonList from "../components/SkeletonList.jsx";
 
 // Primary accent color: #FF7A18
 const PRIMARY_COLOR = "#FF7A18";
@@ -12,7 +14,15 @@ const PRIMARY_COLOR = "#FF7A18";
 const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  // pagination
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(6);
+  const [total, setTotal] = useState(0);
 
   // Filter options
   const filters = [
@@ -22,47 +32,55 @@ const Orders = () => {
     { value: "ready", label: "Ready" },
   ];
 
+  const refetch = async () => {
+    try {
+      setLoading(true);
+      const filterParams = {
+        ...(statusFilter !== "all" ? { status: statusFilter } : {}),
+        ...(search.trim() ? { search: search.trim() } : {}),
+        ...(dateFrom ? { dateFrom } : {}),
+        ...(dateTo ? { dateTo } : {}),
+      };
+      const fetched = await ownerApi.getOrders(filterParams);
+      setTotal(fetched.length);
+      const start = (page - 1) * pageSize;
+      const paged = fetched.slice(start, start + pageSize);
+      setOrders(paged);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch orders
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const filterParams =
-          filter === "all" ? {} : { status: filter };
-        const fetchedOrders = await ownerApi.getOrders(filterParams);
-        setOrders(fetchedOrders);
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    refetch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, search, dateFrom, dateTo, page, pageSize]);
 
-    fetchOrders();
-  }, [filter]);
+  // Real-time refresh on events
+  useEffect(() => {
+    const unsubscribe = ownerApi.subscribe((event) => {
+      if (event.type === "new_order" || event.type === "order_status_changed") {
+        refetch();
+      }
+    });
+    return () => unsubscribe();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, search, dateFrom, dateTo, page, pageSize]);
 
   // Handle order status update
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
       await ownerApi.updateOrderStatus(orderId, newStatus);
-      // Refresh orders list
-      const filterParams =
-        filter === "all" ? {} : { status: filter };
-      const fetchedOrders = await ownerApi.getOrders(filterParams);
-      setOrders(fetchedOrders);
+      // Local refresh; subscribe will also handle external updates
+      refetch();
     } catch (error) {
       console.error("Failed to update order status:", error);
       alert("Failed to update order status");
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="text-gray-600">Loading orders...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -74,57 +92,100 @@ const Orders = () => {
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <div className="flex flex-wrap gap-2">
-          {filters.map((filterOption) => (
-            <button
-              key={filterOption.value}
-              onClick={() => setFilter(filterOption.value)}
-              className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
-                filter === filterOption.value
-                  ? "text-white"
-                  : "text-gray-700 bg-gray-100 hover:bg-gray-200"
-              }`}
-              style={
-                filter === filterOption.value
-                  ? { backgroundColor: PRIMARY_COLOR }
-                  : {}
-              }
-              aria-label={`Filter orders by ${filterOption.label}`}
-              aria-pressed={filter === filterOption.value}
-            >
-              {filterOption.label}
-            </button>
-          ))}
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
+          {/* Status Pills */}
+          <div className="flex flex-wrap gap-2">
+            {filters.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setStatusFilter(opt.value)}
+                className={`px-4 py-2 rounded-lg font-medium text-sm transition-colors ${
+                  statusFilter === opt.value
+                    ? "text-white"
+                    : "text-gray-700 bg-gray-100 hover:bg-gray-200"
+                }`}
+                style={
+                  statusFilter === opt.value ? { backgroundColor: PRIMARY_COLOR } : {}
+                }
+                aria-label={`Filter orders by ${opt.label}`}
+                aria-pressed={statusFilter === opt.value}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div className="flex-1">
+            <label className="block text-sm text-gray-700 mb-1">Search</label>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Order # or customer name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              style={{ "--tw-ring-color": PRIMARY_COLOR }}
+            />
+          </div>
+
+          {/* Date From */}
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">From</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              style={{ "--tw-ring-color": PRIMARY_COLOR }}
+            />
+          </div>
+
+          {/* Date To */}
+          <div>
+            <label className="block text-sm text-gray-700 mb-1">To</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              style={{ "--tw-ring-color": PRIMARY_COLOR }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Orders List */}
-      {orders.length === 0 ? (
+      {/* Content */}
+      {loading ? (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <SkeletonList rows={6} />
+        </div>
+      ) : orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <p className="text-gray-500 text-lg">No orders found</p>
           <p className="text-gray-400 text-sm mt-2">
-            {filter === "all"
-              ? "You don't have any orders yet"
-              : `No orders with status "${filters.find((f) => f.value === filter)?.label}"`}
+            Adjust your filters or date range and try again
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {orders.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              onStatusUpdate={handleStatusUpdate}
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {orders.map((order) => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                onStatusUpdate={handleStatusUpdate}
+              />
+            ))}
+          </div>
+          <div className="pt-4">
+            <Pagination
+              page={page}
+              pageSize={pageSize}
+              total={total}
+              onPageChange={setPage}
             />
-          ))}
-        </div>
-      )}
-
-      {/* Orders Count */}
-      {orders.length > 0 && (
-        <div className="text-center text-sm text-gray-600">
-          Showing {orders.length} order{orders.length !== 1 ? "s" : ""}
-        </div>
+          </div>
+        </>
       )}
     </div>
   );
