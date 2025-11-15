@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import foodAPI from "../apis/food.api";
 import Food from "../components/Food.jsx";
 import userAPI from "../apis/user.api.js";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router-dom";
 
 const Home = () => {
   const [sideBarOpened, setSideBarOpened] = useState(false); // false means closed, true means opened
@@ -14,7 +14,12 @@ const Home = () => {
   const navigator = useNavigate()
 
   useEffect(() => {
-    userAPI.get("/profile").then((res) => setUserData(res.data));
+    userAPI.get("/profile")
+      .then((res) => setUserData(res.data))
+      .catch((err) => {
+        console.log("Failed to fetch user profile:", err);
+        // Continue without user data
+      });
   }, []);
   useEffect(() => {
     const delayDebounce = setTimeout(() => {
@@ -189,6 +194,17 @@ const Home = () => {
               </svg>
             </div>
             <div className="flex items-center space-x-4">
+              {/* Log in as Owner button */}
+              <Link
+                to="/owner/login"
+                className="px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors"
+                style={{ backgroundColor: "#FF7A18" }}
+                onMouseEnter={(e) => (e.target.style.backgroundColor = "#e66a14")}
+                onMouseLeave={(e) => (e.target.style.backgroundColor = "#FF7A18")}
+                aria-label="Log in as restaurant owner"
+              >
+                Log in as Owner
+              </Link>
               {userData ? (
                 <button
                   onClick={() => navigator("/profile")}
