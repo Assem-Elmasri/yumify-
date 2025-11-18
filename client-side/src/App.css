@@ -1,0 +1,18 @@
+@media print {
+  body {
+    background-color: #fff;
+    margin: 0;
+    padding: 0;
+  }
+
+  .invoice-container {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    padding: 20px;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

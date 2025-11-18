@@ -6,8 +6,7 @@ import Button from "./components/Button";
 import SmartRestaurant from "./components/SmartRestaurant";
 import BookTable from "./pages/bookTable";
 import Cart from "./components/Cart";
-import Invoice from "./components/Invoice";
-
+import Invoice from "./pages/Invoice";
 function App() {
   return (
     <>
