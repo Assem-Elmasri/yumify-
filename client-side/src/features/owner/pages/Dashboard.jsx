@@ -5,6 +5,11 @@ import OrderCard from "../components/OrderCard.jsx";
 import Sparkline from "../components/Sparkline.jsx";
 import BarChart from "../components/BarChart.jsx";
 
+import { 
+  Home, ShoppingCart, Bell, Users, Settings, LogOut, Menu, ChevronLeft, ChevronRight, MessageCircle, Truck,
+  ScrollText, ShoppingBag
+} from "lucide-react"; 
+
 // Primary accent color: #FF7A18
 const PRIMARY_COLOR = "#FF7A18";
 
@@ -254,8 +259,8 @@ const Dashboard = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <p className="text-sm font-medium text-gray-600">Order Type (Today)</p>
           <div className="mt-3 flex items-center justify-between">
-            <div className="flex items-center gap-2"><span className="text-xl">🚚</span><span className="font-semibold">{typeCounts.delivery} Delivery</span></div>
-            <div className="flex items-center gap-2"><span className="text-xl">🛍️</span><span className="font-semibold">{typeCounts.pickup} Pickup</span></div>
+            <div className="flex items-center gap-2"><span className="text-xl"> <Truck size={24} color="#ff7a18" /> </span><span className="font-semibold">{typeCounts.delivery} Delivery</span></div>
+            <div className="flex items-center gap-2"><span className="text-xl"> <ShoppingBag size={22} color="#ff7a18" /> </span><span className="font-semibold">{typeCounts.pickup} Pickup</span></div>
           </div>
         </div>
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

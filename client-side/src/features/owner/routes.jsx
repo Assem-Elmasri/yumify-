@@ -9,6 +9,7 @@ import Orders from "./pages/Orders.jsx";
 import OrderDetails from "./pages/OrderDetails.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import Inventory from "./pages/Inventory.jsx";
+import Menu from "./pages/Menu.jsx";
 import Staff from "./pages/Staff.jsx";
 import Feedback from "./pages/Feedback.jsx";
 import Suppliers from "./pages/Suppliers.jsx";
@@ -52,6 +53,7 @@ const OwnerRoutes = () => {
           {/* Other owner pages */}
           <Route path="notifications" element={<Notifications />} />
           <Route path="inventory" element={<Inventory />} />
+          <Route path="menu" element={<Menu />} />
           <Route path="staff" element={<Staff />} />
           <Route path="feedback" element={<Feedback />} />
           <Route path="suppliers" element={<Suppliers />} />

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import ownerApi from "../../../api/client.js";
+import { 
+  Star
+} from "lucide-react";
 
 // Primary accent color: #FF7A18
 const PRIMARY_COLOR = "#FF7A18";

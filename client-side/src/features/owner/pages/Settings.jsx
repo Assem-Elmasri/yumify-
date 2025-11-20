@@ -23,9 +23,9 @@ const Settings = () => {
         {/* Profile Settings */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Profile Settings
+            Assem will do this page ISA !!! 
           </h2>
-          <div className="space-y-4">
+          {/* <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Owner Name
@@ -54,10 +54,10 @@ const Settings = () => {
             >
               Save Changes
             </button>
-          </div>
+          </div> */}
         </div>
 
-        {/* Restaurant Settings */}
+        {/* Restaurant Settings
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Restaurant Settings
@@ -105,12 +105,12 @@ const Settings = () => {
           </div>
         </div>
 
-        {/* Coming Soon Notice */}
+        {/* Coming Soon Notice 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <p className="text-sm text-blue-800">
             <strong>Note:</strong> Additional settings features coming soon!
           </p>
-        </div>
+        </div>*/}
       </div>
     </div>
   );

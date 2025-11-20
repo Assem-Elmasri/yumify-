@@ -3,6 +3,11 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import useOwnerAuth from "./hooks/useOwnerAuth.js";
 import ownerApi from "../../api/client.js";
 import Toast from "./components/Toast.jsx";
+import { 
+        Home, ShoppingCart, Bell, Users, Settings, LogOut, Menu, ChevronLeft, ChevronRight, MessageCircle, Truck,
+        ScrollText,Utensils
+} from "lucide-react"; 
+
 
 // Primary accent color: #FF7A18
 const PRIMARY_COLOR = "#FF7A18";
@@ -21,19 +26,20 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
   };
 
   const navLinks = [
-    { path: "/owner/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/owner/orders", label: "Orders", icon: "📦" },
+    { path: "/owner/dashboard", label: "Dashboard", icon: <Home/> },
+    { path: "/owner/menu", label: "Menu", icon: <Utensils /> },
+    { path: "/owner/orders", label: "Orders", icon: <ShoppingCart/> },
     {
       path: "/owner/notifications",
       label: "Notifications",
-      icon: "🔔",
+      icon: <Bell/>,
       badge: unreadCount > 0 ? unreadCount : null,
     },
-    { path: "/owner/inventory", label: "Inventory", icon: "📋" },
-    { path: "/owner/staff", label: "Staff", icon: "👥" },
-    { path: "/owner/feedback", label: "Feedback", icon: "💬" },
-    { path: "/owner/suppliers", label: "Suppliers", icon: "🚚" },
-    { path: "/owner/settings", label: "Settings", icon: "⚙️" },
+    { path: "/owner/inventory", label: "Inventory", icon: <ScrollText /> },
+    { path: "/owner/staff", label: "Staff", icon: <Users/> },
+    { path: "/owner/feedback", label: "Feedback", icon:  <MessageCircle /> },
+    // { path: "/owner/suppliers", label: "Suppliers", icon: <Truck /> },
+    { path: "/owner/settings", label: "Settings", icon: <Settings/> },
   ];
 
   return (
@@ -113,7 +119,7 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
               aria-label="Logout"
               title={collapsed ? "Logout" : undefined}
             >
-              <span className="text-lg" aria-hidden="true">🚪</span>
+              <span className="text-lg" aria-hidden="true"> <LogOut /> </span>
               {!collapsed && <span>Logout</span>}
             </button>
           </div>

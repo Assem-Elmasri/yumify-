@@ -24,17 +24,17 @@ const OrderCard = ({ order, onStatusUpdate }) => {
     });
   };
 
-  // Get status color
+  // Get status color - Professional colors consistent with orange theme
   const getStatusColor = (status) => {
     const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      preparing: "bg-blue-100 text-blue-800",
-      ready: "bg-green-100 text-green-800",
-      out_for_delivery: "bg-purple-100 text-purple-800",
-      completed: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
+      pending: "bg-amber-50 text-amber-700 border border-amber-200",
+      preparing: "bg-orange-50 text-orange-700 border border-orange-200",
+      ready: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+      out_for_delivery: "bg-cyan-50 text-cyan-700 border border-cyan-200",
+      completed: "bg-slate-100 text-slate-700 border border-slate-200",
+      cancelled: "bg-rose-50 text-rose-700 border border-rose-200",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status] || "bg-slate-100 text-slate-700 border border-slate-200";
   };
 
   // Get status label
@@ -45,7 +45,7 @@ const OrderCard = ({ order, onStatusUpdate }) => {
       .join(" ");
   };
 
-  // Get action buttons based on status
+  // Get action buttons based on status - Professional colors consistent with theme
   const getActionButtons = () => {
     const buttons = [];
 
@@ -54,38 +54,39 @@ const OrderCard = ({ order, onStatusUpdate }) => {
         buttons.push({
           label: "Start Preparing",
           status: "preparing",
-          color: "bg-blue-500 hover:bg-blue-600",
+          color: `text-white hover:opacity-90`,
+          style: { backgroundColor: PRIMARY_COLOR },
         });
         buttons.push({
           label: "Cancel",
           status: "cancelled",
-          color: "bg-red-500 hover:bg-red-600",
+          color: "bg-rose-500 hover:bg-rose-600 text-white",
         });
         break;
       case "preparing":
         buttons.push({
           label: "Mark Ready",
           status: "ready",
-          color: "bg-green-500 hover:bg-green-600",
+          color: "bg-emerald-500 hover:bg-emerald-600 text-white",
         });
         break;
       case "ready":
         buttons.push({
           label: "Out for Delivery",
           status: "out_for_delivery",
-          color: "bg-purple-500 hover:bg-purple-600",
+          color: "bg-cyan-500 hover:bg-cyan-600 text-white",
         });
         buttons.push({
           label: "Complete",
           status: "completed",
-          color: "bg-gray-500 hover:bg-gray-600",
+          color: "bg-slate-500 hover:bg-slate-600 text-white",
         });
         break;
       case "out_for_delivery":
         buttons.push({
           label: "Complete",
           status: "completed",
-          color: "bg-gray-500 hover:bg-gray-600",
+          color: "bg-slate-500 hover:bg-slate-600 text-white",
         });
         break;
       default:
@@ -106,7 +107,7 @@ const OrderCard = ({ order, onStatusUpdate }) => {
           <div className="flex items-center gap-3 mb-1">
             <h3 className="font-semibold text-gray-900">{order.orderNumber}</h3>
             <span
-              className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+              className={`px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
                 order.status
               )}`}
             >
@@ -146,7 +147,8 @@ const OrderCard = ({ order, onStatusUpdate }) => {
             <button
               key={button.status}
               onClick={() => onStatusUpdate(order.id, button.status)}
-              className={`flex-1 px-4 py-2 text-white text-sm font-medium rounded-lg transition-colors ${button.color}`}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md ${button.color}`}
+              style={button.style || {}}
               aria-label={`Update order to ${button.label}`}
             >
               {button.label}

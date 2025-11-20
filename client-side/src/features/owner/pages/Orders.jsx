@@ -7,6 +7,96 @@ import SkeletonList from "../components/SkeletonList.jsx";
 // Primary accent color: #FF7A18
 const PRIMARY_COLOR = "#FF7A18";
 
+// -------------------- START OF DATE INPUT COMPONENT --------------------
+const DateInput = ({ value, onChange, className, style, ...props }) => {
+  const [displayValue, setDisplayValue] = useState(value || "");
+
+  useEffect(() => {
+    setDisplayValue(value || "");
+  }, [value]);
+
+  const handleChange = (e) => {
+    const inputValue = e.target.value;
+    setDisplayValue(inputValue);
+
+    // Validate and format date input (YYYY-MM-DD)
+    if (inputValue === "") {
+      onChange(e);
+      return;
+    }
+
+    // Remove any non-digit characters except hyphens
+    const cleaned = inputValue.replace(/[^\d-]/g, "");
+
+    // Auto-format as user types: YYYY-MM-DD
+    let formatted = cleaned;
+    if (cleaned.length > 4 && cleaned[4] !== "-") {
+      formatted = cleaned.slice(0, 4) + "-" + cleaned.slice(4);
+    }
+    if (formatted.length > 7 && formatted[7] !== "-") {
+      formatted = formatted.slice(0, 7) + "-" + formatted.slice(7);
+    }
+    // Limit to 10 characters (YYYY-MM-DD)
+    formatted = formatted.slice(0, 10);
+
+    // Validate date format
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (dateRegex.test(formatted)) {
+      // Validate that it's a valid date
+      const date = new Date(formatted);
+      if (!isNaN(date.getTime())) {
+        const syntheticEvent = {
+          ...e,
+          target: { ...e.target, value: formatted },
+        };
+        onChange(syntheticEvent);
+        setDisplayValue(formatted);
+        return;
+      }
+    }
+
+    setDisplayValue(formatted);
+  };
+
+  const handleBlur = (e) => {
+    // On blur, ensure the value is in correct format or clear it
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (displayValue && !dateRegex.test(displayValue)) {
+      setDisplayValue("");
+      const syntheticEvent = {
+        ...e,
+        target: { ...e.target, value: "" },
+      };
+      onChange(syntheticEvent);
+    } else if (displayValue) {
+      // Ensure value matches display
+      const syntheticEvent = {
+        ...e,
+        target: { ...e.target, value: displayValue },
+      };
+      onChange(syntheticEvent);
+    }
+  };
+
+  return (
+    <input
+      type="text"
+      value={displayValue}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      placeholder="YYYY-MM-DD"
+      pattern="\d{4}-\d{2}-\d{2}"
+      className={className}
+      style={style}
+      lang="en-US"
+      dir="ltr"
+      maxLength={10}
+      {...props}
+    />
+  );
+};
+// -------------------- END OF DATE INPUT COMPONENT --------------------
+
 /**
  * Orders Page
  * Displays all orders with filters and status management
@@ -52,6 +142,7 @@ const Orders = () => {
       setLoading(false);
     }
   };
+
 
   // Fetch orders
   useEffect(() => {
@@ -129,25 +220,23 @@ const Orders = () => {
           </div>
 
           {/* Date From */}
-          <div>
+          <div lang="en-US" dir="ltr">
             <label className="block text-sm text-gray-700 mb-1">From</label>
-            <input
-              type="date"
+            <DateInput
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 w-full"
               style={{ "--tw-ring-color": PRIMARY_COLOR }}
             />
           </div>
 
           {/* Date To */}
-          <div>
+          <div lang="en-US" dir="ltr">
             <label className="block text-sm text-gray-700 mb-1">To</label>
-            <input
-              type="date"
+            <DateInput
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 w-full"
               style={{ "--tw-ring-color": PRIMARY_COLOR }}
             />
           </div>

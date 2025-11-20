@@ -47,17 +47,17 @@ const OrderDetails = () => {
     });
   };
 
-  // Get status color
+  // Get status color - Professional colors consistent with orange theme
   const getStatusColor = (status) => {
     const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      preparing: "bg-blue-100 text-blue-800",
-      ready: "bg-green-100 text-green-800",
-      out_for_delivery: "bg-purple-100 text-purple-800",
-      completed: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
+      pending: "bg-amber-50 text-amber-700 border border-amber-200",
+      preparing: "bg-orange-50 text-orange-700 border border-orange-200",
+      ready: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+      out_for_delivery: "bg-cyan-50 text-cyan-700 border border-cyan-200",
+      completed: "bg-slate-100 text-slate-700 border border-slate-200",
+      cancelled: "bg-rose-50 text-rose-700 border border-rose-200",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return colors[status] || "bg-slate-100 text-slate-700 border border-slate-200";
   };
 
   // Get status label

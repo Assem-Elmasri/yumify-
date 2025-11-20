@@ -14,6 +14,7 @@ let mockData = {
   notifications: [],
   feedback: [],
   suppliers: [],
+  menu: [],
   currentToken: null,
   currentOwner: null,
 };
@@ -43,6 +44,18 @@ const emitEvent = (event) => {
 
 // Initialize mock API with dummy data
 const initMockApi = () => {
+  // Restore session from localStorage if token exists (for persistence across page refreshes)
+  const storedToken = localStorage.getItem("owner_token");
+  if (storedToken) {
+    mockData.currentToken = storedToken;
+    mockData.currentOwner = {
+      id: "owner_1",
+      name: "Ahmed Restaurant Owner",
+      email: "owner@restaurant.com",
+      restaurantId: "restaurant_1",
+    };
+  }
+
   // Preload dummy orders
   mockData.orders = [
     {
@@ -188,6 +201,60 @@ const initMockApi = () => {
       status: "in_stock",
       lastUpdated: new Date(Date.now() - 3600000).toISOString(),
       supplier: "Bakery Express",
+    },
+  ];
+
+  // Preload dummy menu items
+  mockData.menu = [
+    {
+      id: "menu_1",
+      name: "Caesar Salad",
+      description: "Fresh romaine, croutons, and parmesan.",
+      price: 9.50,
+      category: "Appetizers",
+      imageUrl: "",
+      available: true,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+      id: "menu_2",
+      name: "Chocolate Lava Cake",
+      description: "Warm molten chocolate cake.",
+      price: 7.99,
+      category: "Desserts",
+      imageUrl: "",
+      available: true,
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+    },
+    {
+      id: "menu_3",
+      name: "Classic Cheeseburger",
+      description: "Juicy beef patty with cheddar cheese.",
+      price: 12.99,
+      category: "Main Course",
+      imageUrl: "",
+      available: true,
+      createdAt: new Date(Date.now() - 259200000).toISOString(),
+    },
+    {
+      id: "menu_4",
+      name: "Iced Coffee",
+      description: "Cold brewed, refreshing coffee.",
+      price: 4.50,
+      category: "Drinks",
+      imageUrl: "",
+      available: true,
+      createdAt: new Date(Date.now() - 345600000).toISOString(),
+    },
+    {
+      id: "menu_5",
+      name: "Pepperoni Pizza",
+      description: "Classic pepperoni and mozzarella.",
+      price: 14.99,
+      category: "Main Course",
+      imageUrl: "",
+      available: true,
+      createdAt: new Date(Date.now() - 432000000).toISOString(),
     },
   ];
 
@@ -463,6 +530,22 @@ const auth = {
   // TODO: Replace with GET /api/owner/auth/me
   async me() {
     await delay();
+
+    // Check localStorage if in-memory token is not set (e.g., after page refresh)
+    if (!mockData.currentToken) {
+      const storedToken = localStorage.getItem("owner_token");
+      if (storedToken) {
+        // Restore session from localStorage
+        mockData.currentToken = storedToken;
+        // Restore owner data (same mock owner for all sessions)
+        mockData.currentOwner = {
+          id: "owner_1",
+          name: "Ahmed Restaurant Owner",
+          email: "owner@restaurant.com",
+          restaurantId: "restaurant_1",
+        };
+      }
+    }
 
     if (!mockData.currentToken) {
       const error = new Error("Unauthorized");
@@ -907,6 +990,69 @@ const simulateNewOrder = () => {
   return newOrder;
 };
 
+// Menu module
+const menu = {
+  // TODO: Replace with GET /api/owner/menu
+  async getItems() {
+    await delay();
+    return mockData.menu;
+  },
+
+  // TODO: Replace with POST /api/owner/menu
+  async createItem(item) {
+    await delay();
+
+    const newItem = {
+      id: `menu_${Date.now()}`,
+      name: item.name,
+      description: item.description || "",
+      price: parseFloat(item.price) || 0,
+      category: item.category || "Main Course",
+      imageUrl: item.imageUrl || "",
+      available: item.available !== false,
+      createdAt: new Date().toISOString(),
+    };
+
+    mockData.menu.push(newItem);
+    return newItem;
+  },
+
+  // TODO: Replace with PUT /api/owner/menu/:id
+  async updateItem(id, updates) {
+    await delay();
+
+    const index = mockData.menu.findIndex((item) => item.id === id);
+    if (index === -1) {
+      const error = new Error("Menu item not found");
+      error.status = 404;
+      throw error;
+    }
+
+    mockData.menu[index] = {
+      ...mockData.menu[index],
+      ...updates,
+      price: updates.price !== undefined ? parseFloat(updates.price) : mockData.menu[index].price,
+    };
+
+    return mockData.menu[index];
+  },
+
+  // TODO: Replace with DELETE /api/owner/menu/:id
+  async deleteItem(id) {
+    await delay();
+
+    const index = mockData.menu.findIndex((item) => item.id === id);
+    if (index === -1) {
+      const error = new Error("Menu item not found");
+      error.status = 404;
+      throw error;
+    }
+
+    mockData.menu.splice(index, 1);
+    return { success: true };
+  },
+};
+
 // Export default object with all modules and utilities
 export default {
   initMockApi,
@@ -917,6 +1063,7 @@ export default {
   notifications,
   feedback,
   suppliers,
+  menu,
   subscribe,
   unsubscribe,
   // Expose simulateNewOrder for testing/demo purposes

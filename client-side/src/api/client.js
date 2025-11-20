@@ -402,6 +402,78 @@ const ownerApi = {
     return await mockApi.simulateNewOrder();
   },
 
+  // ==================== Menu ====================
+
+  /**
+   * Get all menu items
+   * @returns {Promise<Array>} Array of menu item objects
+   * 
+   * TODO: Replace with:
+   * async getMenuItems() {
+   *   const response = await axios.get(`${API_BASE_URL}/menu`, {
+   *     headers: { Authorization: `Bearer ${localStorage.getItem('ownerToken')}` }
+   *   });
+   *   return response.data.items || [];
+   * }
+   */
+  async getMenuItems() {
+    const items = await mockApi.menu.getItems();
+    return Array.isArray(items) ? items : [];
+  },
+
+  /**
+   * Create new menu item
+   * @param {Object} item - Menu item data
+   * @returns {Promise<Object>} Created menu item object
+   * 
+   * TODO: Replace with:
+   * async createMenuItem(item) {
+   *   const response = await axios.post(`${API_BASE_URL}/menu`, item, {
+   *     headers: { Authorization: `Bearer ${localStorage.getItem('ownerToken')}` }
+   *   });
+   *   return response.data.item;
+   * }
+   */
+  async createMenuItem(item) {
+    return await mockApi.menu.createItem(item);
+  },
+
+  /**
+   * Update menu item
+   * @param {string} id - Menu item ID
+   * @param {Object} item - Updated menu item data
+   * @returns {Promise<Object>} Updated menu item object
+   * 
+   * TODO: Replace with:
+   * async updateMenuItem(id, item) {
+   *   const response = await axios.put(`${API_BASE_URL}/menu/${id}`, item, {
+   *     headers: { Authorization: `Bearer ${localStorage.getItem('ownerToken')}` }
+   *   });
+   *   return response.data.item;
+   * }
+   */
+  async updateMenuItem(id, item) {
+    return await mockApi.menu.updateItem(id, item);
+  },
+
+  /**
+   * Delete menu item
+   * @param {string} id - Menu item ID
+   * @returns {Promise<{success: boolean}>}
+   * 
+   * TODO: Replace with:
+   * async deleteMenuItem(id) {
+   *   const response = await axios.delete(`${API_BASE_URL}/menu/${id}`, {
+   *     headers: { Authorization: `Bearer ${localStorage.getItem('ownerToken')}` }
+   *   });
+   *   return { success: true };
+   * }
+   */
+  async deleteMenuItem(id) {
+    const result = await mockApi.menu.deleteItem(id);
+    return { success: result.success || true };
+  },
+
   // ==================== Event Subscription ====================
 
   /**
