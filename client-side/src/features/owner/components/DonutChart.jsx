@@ -18,9 +18,9 @@ const describeArc = (cx, cy, r, startAngle, endAngle) => {
 };
 
 const DonutChart = ({ data = [], colors = [], width = 280, height = 200, thickness = 18 }) => {
-  const cx = width / 3; // chart on left, legend on right
-  const cy = height / 2;
-  const r = Math.min(cx, cy) - 8;
+  const cx = width / 2; // centered chart
+  const cy = height / 2.5; // slightly higher to make room for legend
+  const r = Math.min(cx, cy) - 20;
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
 
   let angle = 0;
@@ -32,26 +32,34 @@ const DonutChart = ({ data = [], colors = [], width = 280, height = 200, thickne
     return { start, end, label: d.label, value: d.value, color: colors[i % colors.length] };
   });
 
+  // Calculate legend position (horizontal below chart)
+  const legendY = height - 20;
+  const legendItemWidth = width / segments.length;
+  const legendStartX = 0;
+
   return (
-    <svg width={width} height={height}>
-      {/* Segments */}
-      {segments.map((s, i) => (
-        <g key={i}>
-          <path d={describeArc(cx, cy, r, s.start, s.end)} stroke={s.color} strokeWidth={thickness} fill="none" />
-        </g>
-      ))}
-      {/* Center text */}
-      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize="14" fill="#111827">
-        {total}
-      </text>
-      {/* Legend */}
-      {segments.map((s, i) => (
-        <g key={i} transform={`translate(${width * 0.6}, ${24 + i * 22})`}>
-          <rect width="12" height="12" rx="2" fill={s.color} />
-          <text x="18" y="10" fontSize="12" fill="#374151">{s.label} ({s.value})</text>
-        </g>
-      ))}
-    </svg>
+    <div className="flex flex-col items-center">
+      <svg width={width} height={height - 40} viewBox={`0 0 ${width} ${height - 40}`}>
+        {/* Segments */}
+        {segments.map((s, i) => (
+          <g key={i}>
+            <path d={describeArc(cx, cy, r, s.start, s.end)} stroke={s.color} strokeWidth={thickness} fill="none" strokeLinecap="round" />
+          </g>
+        ))}
+      </svg>
+      {/* Horizontal Legend */}
+      <div className="flex items-center justify-center gap-4 flex-wrap mt-2">
+        {segments.map((s, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <div
+              className="w-3 h-3 rounded"
+              style={{ backgroundColor: s.color }}
+            />
+            <span className="text-sm text-gray-700">{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 };
 
