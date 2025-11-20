@@ -8,7 +8,6 @@ const cartAPI = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-   withCredentials: true, // Include cookies for authentication}
 });
 
 export default cartAPI;

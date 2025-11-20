@@ -8,5 +8,3 @@ const bookingSchema = new mongoose.Schema({
     numberOfGuests: { type: Number, required: true, min: 1 },
     locationPreference: { type: String  }
 }, { timestamps: true });
-
-export default mongoose.model("Booking", bookingSchema);
