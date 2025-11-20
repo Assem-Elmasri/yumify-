@@ -1,8 +1,19 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ownerApi from "../../../api/client.js";
 
 // Primary accent color: #FF7A18
 const PRIMARY_COLOR = "#FF7A18";
+
+// Helper: map notification type to an icon
+const getTypeIcon = (type) => {
+  const map = {
+    order: "📦",
+    inventory: "📋",
+    feedback: "💬",
+    system: "⚙️",
+  };
+  return map[type] || "🔔";
+};
 
 /**
  * Notifications Page
@@ -11,6 +22,17 @@ const PRIMARY_COLOR = "#FF7A18";
 const Notifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Filters
+  const [typeFilter, setTypeFilter] = useState("all"); // all | order | inventory | feedback | system
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+
+  // Selection
+  const [selected, setSelected] = useState({}); // id -> true
+
+  // Incremental loading
+  const [visibleCount, setVisibleCount] = useState(10);
+  const PAGE_STEP = 10;
 
   useEffect(() => {
     fetchNotifications();
@@ -28,6 +50,15 @@ const Notifications = () => {
     }
   };
 
+  const filtered = useMemo(() => {
+    let list = notifications;
+    if (typeFilter !== "all") list = list.filter((n) => n.type === typeFilter);
+    if (showUnreadOnly) list = list.filter((n) => !n.read);
+    return list;
+  }, [notifications, typeFilter, showUnreadOnly]);
+
+  const visible = useMemo(() => filtered.slice(0, visibleCount), [filtered, visibleCount]);
+
   const handleMarkRead = async (id) => {
     try {
       await ownerApi.markNotificationRead(id);
@@ -40,31 +71,32 @@ const Notifications = () => {
   const handleMarkAllRead = async () => {
     try {
       await ownerApi.markAllNotifications();
+      setSelected({});
       fetchNotifications();
     } catch (error) {
       console.error("Failed to mark all as read:", error);
     }
   };
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const handleMarkSelected = async () => {
+    const ids = Object.keys(selected).filter((id) => selected[id]);
+    if (ids.length === 0) return;
+    try {
+      for (const id of ids) {
+        await ownerApi.markNotificationRead(id);
+      }
+      setSelected({});
+      fetchNotifications();
+    } catch (error) {
+      console.error("Failed to mark selected as read:", error);
+    }
   };
 
-  const getTypeIcon = (type) => {
-    const icons = {
-      order: "📦",
-      inventory: "📋",
-      feedback: "💬",
-      system: "⚙️",
-    };
-    return icons[type] || "🔔";
+  const toggleSelect = (id) => {
+    setSelected((s) => ({ ...s, [id]: !s[id] }));
   };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (loading) {
     return (
@@ -73,8 +105,6 @@ const Notifications = () => {
       </div>
     );
   }
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="space-y-6">
@@ -86,25 +116,65 @@ const Notifications = () => {
             {unreadCount > 0 ? `${unreadCount} unread notification${unreadCount !== 1 ? "s" : ""}` : "All notifications read"}
           </p>
         </div>
-        {unreadCount > 0 && (
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <button
+              onClick={handleMarkAllRead}
+              className="px-4 py-2 rounded-lg font-medium text-sm text-white"
+              style={{ backgroundColor: PRIMARY_COLOR }}
+            >
+              Mark All Read
+            </button>
+          )}
           <button
-            onClick={handleMarkAllRead}
-            className="px-4 py-2 rounded-lg font-medium text-sm text-white"
-            style={{ backgroundColor: PRIMARY_COLOR }}
+            onClick={handleMarkSelected}
+            className="px-4 py-2 rounded-lg font-medium text-sm border border-gray-300 text-gray-700"
+            disabled={Object.keys(selected).filter((id) => selected[id]).length === 0}
           >
-            Mark All Read
+            Mark Selected Read
           </button>
-        )}
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 flex flex-wrap gap-3 items-center">
+        <div className="flex gap-2">
+          {[
+            { value: "all", label: "All" },
+            { value: "order", label: "Orders" },
+            { value: "inventory", label: "Inventory" },
+            { value: "feedback", label: "Feedback" },
+            { value: "system", label: "System" },
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => {
+                setTypeFilter(opt.value);
+                setVisibleCount(PAGE_STEP);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
+                typeFilter === opt.value ? "text-white" : "text-gray-700 bg-gray-100 hover:bg-gray-200"
+              }`}
+              style={typeFilter === opt.value ? { backgroundColor: PRIMARY_COLOR } : {}}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 ml-auto text-sm text-gray-700">
+          <input type="checkbox" checked={showUnreadOnly} onChange={(e) => { setShowUnreadOnly(e.target.checked); setVisibleCount(PAGE_STEP); }} />
+          Unread only
+        </label>
       </div>
 
       {/* Notifications List */}
-      {notifications.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
           <p className="text-gray-500 text-lg">No notifications</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {notifications.map((notification) => (
+          {visible.map((notification) => (
             <div
               key={notification.id}
               className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${
@@ -114,11 +184,18 @@ const Notifications = () => {
             >
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3 flex-1">
+                  <input
+                    type="checkbox"
+                    className="mt-1"
+                    checked={!!selected[notification.id]}
+                    onChange={() => toggleSelect(notification.id)}
+                    aria-label="Select notification"
+                  />
                   <span className="text-2xl mt-1">{getTypeIcon(notification.type)}</span>
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">{notification.title}</h3>
                     <p className="text-gray-600 mt-1">{notification.message}</p>
-                    <p className="text-xs text-gray-500 mt-2">{formatDate(notification.createdAt)}</p>
+                    <p className="text-xs text-gray-500 mt-2">{new Date(notification.createdAt).toLocaleString()}</p>
                   </div>
                 </div>
                 {!notification.read && (
@@ -132,6 +209,17 @@ const Notifications = () => {
               </div>
             </div>
           ))}
+
+          {visible.length < filtered.length && (
+            <div className="text-center pt-2">
+              <button
+                onClick={() => setVisibleCount((c) => c + PAGE_STEP)}
+                className="px-4 py-2 rounded-lg font-medium text-sm border border-gray-300 text-gray-700"
+              >
+                Load more
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
