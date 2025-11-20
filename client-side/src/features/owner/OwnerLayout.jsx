@@ -5,7 +5,7 @@ import ownerApi from "../../api/client.js";
 import Toast from "./components/Toast.jsx";
 import { 
         Home, ShoppingCart, Bell, Users, Settings, LogOut, Menu, ChevronLeft, ChevronRight, MessageCircle, Truck,
-        ScrollText,Utensils
+        ScrollText, Utensils, PanelLeftClose, PanelLeftOpen, X
 } from "lucide-react"; 
 
 
@@ -14,9 +14,9 @@ const PRIMARY_COLOR = "#FF7A18";
 
 /**
  * OwnerSidebar Component
- * Responsive sidebar navigation for owner portal
+ * Modern responsive sidebar navigation for owner portal
  */
-const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
+const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed, onToggleCollapse }) => {
   const navigate = useNavigate();
   const { logout } = useOwnerAuth();
 
@@ -26,20 +26,20 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
   };
 
   const navLinks = [
-    { path: "/owner/dashboard", label: "Dashboard", icon: <Home/> },
-    { path: "/owner/menu", label: "Menu", icon: <Utensils /> },
-    { path: "/owner/orders", label: "Orders", icon: <ShoppingCart/> },
+    { path: "/owner/dashboard", label: "Dashboard", icon: <Home size={20}/> },
+    { path: "/owner/menu", label: "Menu", icon: <Utensils size={20} /> },
+    { path: "/owner/orders", label: "Orders", icon: <ShoppingCart size={20}/> },
     {
       path: "/owner/notifications",
       label: "Notifications",
-      icon: <Bell/>,
+      icon: <Bell size={20}/>,
       badge: unreadCount > 0 ? unreadCount : null,
     },
-    { path: "/owner/inventory", label: "Inventory", icon: <ScrollText /> },
-    { path: "/owner/staff", label: "Staff", icon: <Users/> },
-    { path: "/owner/feedback", label: "Feedback", icon:  <MessageCircle /> },
+    { path: "/owner/inventory", label: "Inventory", icon: <ScrollText size={20} /> },
+    { path: "/owner/staff", label: "Staff", icon: <Users size={20}/> },
+    { path: "/owner/feedback", label: "Feedback", icon:  <MessageCircle size={20} /> },
     // { path: "/owner/suppliers", label: "Suppliers", icon: <Truck /> },
-    { path: "/owner/settings", label: "Settings", icon: <Settings/> },
+    { path: "/owner/settings", label: "Settings", icon: <Settings size={20}/> },
   ];
 
   return (
@@ -47,7 +47,7 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
       {/* Overlay for mobile */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -55,51 +55,94 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full ${collapsed ? "w-20" : "w-64"} bg-white shadow-lg transform transition-all duration-300 ease-in-out z-50 lg:translate-x-0 ${
+        className={`fixed top-0 left-0 h-full ${collapsed ? "w-20" : "w-72"} bg-gradient-to-b from-white to-gray-50 shadow-md hover:shadow-xl transform transition-all duration-300 ease-in-out z-50 lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
         aria-label="Main navigation"
         aria-expanded={!collapsed}
       >
         <div className="flex flex-col h-full">
-          {/* Logo/Header */}
-          <div className={`p-6 border-b border-gray-200 ${collapsed ? "px-4" : "px-6"}`}>
-            <h1 className={`font-bold ${collapsed ? "text-base" : "text-2xl"}`} style={{ color: PRIMARY_COLOR }}>
-              {collapsed ? "Y" : "Yumify"}
-            </h1>
-            {!collapsed && <p className="text-sm text-gray-500 mt-1">Owner Portal</p>}
+          {/* Logo/Header with Collapse Button */}
+          <div className={`relative p-6 border-b border-gray-200/60 ${collapsed ? "px-4" : "px-6"} bg-white/50 backdrop-blur-sm`}>
+            {/* Close button for mobile */}
+            <button
+              onClick={onClose}
+              className="lg:hidden absolute top-4 right-4 p-2 rounded-lg hover:bg-gray-100 transition-colors text-gray-600"
+              aria-label="Close menu"
+            >
+              <X size={20} />
+            </button>
+            
+            <div className={`flex items-center ${collapsed ? "justify-center" : "justify-between"}`}>
+              <div className={`flex items-center gap-3 ${collapsed ? "justify-center w-full" : ""}`}>
+                <div className="p-2 rounded-xl" style={{ backgroundColor: `${PRIMARY_COLOR}15` }}>
+                  <h1 className={`font-bold ${collapsed ? "text-xl" : "text-2xl"}`} style={{ color: PRIMARY_COLOR }}>
+                    {collapsed ? "Y" : "Yumify"}
+                  </h1>
+                </div>
+                {/* {!collapsed && (
+                  <div>
+                    <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">Owner Portal</p>
+                  </div>
+                )} */}
+              </div>
+              
+              {/* Desktop Collapse Button */}
+              <button
+                onClick={onToggleCollapse}
+                className="hidden lg:flex items-center justify-center p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 text-gray-600 hover:text-gray-900"
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {collapsed ? (
+                  <PanelLeftOpen size={15} className="transition-transform" />
+                ) : (
+                  <PanelLeftClose size={15} className="transition-transform" />
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Navigation Links */}
-          <nav className="flex-1 overflow-y-auto py-4" aria-label="Navigation menu">
-            <ul className="space-y-1 px-3">
+          <nav className="flex-1 overflow-y-auto py-6 px-3" aria-label="Navigation menu">
+            <ul className="space-y-2">
               {navLinks.map((link) => (
                 <li key={link.path}>
                   <NavLink
                     to={link.path}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `flex items-center ${collapsed ? "justify-center" : "justify-between"} px-4 py-3 rounded-lg transition-colors ${
+                      `group flex items-center ${collapsed ? "justify-center" : "justify-between"} px-4 py-3 rounded-xl transition-all duration-200 ${
                         isActive
-                          ? "text-white font-medium"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "text-white font-semibold shadow-lg shadow-orange-500/20"
+                          : "text-gray-700 hover:bg-gray-100/80 hover:text-gray-900"
                       }`
                     }
                     style={({ isActive }) =>
-                      isActive ? { backgroundColor: PRIMARY_COLOR } : {}
+                      isActive 
+                        ? { 
+                            backgroundColor: PRIMARY_COLOR,
+                            transform: "translateX(4px)"
+                          } 
+                        : {}
                     }
                     aria-current="page"
                     title={collapsed ? link.label : undefined}
                   >
                     <span className={`flex items-center gap-3 ${collapsed ? "justify-center" : ""}`}>
-                      <span className="text-lg" aria-hidden="true">
+                      <span 
+                        className="transition-transform duration-200 group-hover:scale-110 group-[.active]:scale-110"
+                        aria-hidden="true"
+                      >
                         {link.icon}
                       </span>
-                      {!collapsed && <span>{link.label}</span>}
+                      {!collapsed && (
+                        <span className="font-medium">{link.label}</span>
+                      )}
                     </span>
                     {!collapsed && link.badge && (
                       <span
-                        className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
+                        className="bg-red-500 text-white text-xs font-bold rounded-full min-w-[20px] h-5 px-1.5 flex items-center justify-center animate-pulse"
                         aria-label={`${link.badge} unread notifications`}
                       >
                         {link.badge}
@@ -112,14 +155,19 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
           </nav>
 
           {/* Logout Button */}
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-4 border-t border-gray-200/60 bg-white/30 backdrop-blur-sm">
             <button
               onClick={handleLogout}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-colors ${collapsed ? "justify-center" : ""}`}
+              className={`group w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-medium ${collapsed ? "justify-center" : ""}`}
               aria-label="Logout"
               title={collapsed ? "Logout" : undefined}
             >
-              <span className="text-lg" aria-hidden="true"> <LogOut /> </span>
+              <span 
+                className="text-lg transition-transform duration-200 group-hover:scale-110" 
+                aria-hidden="true"
+              >
+                <LogOut size={20} />
+              </span>
               {!collapsed && <span>Logout</span>}
             </button>
           </div>
@@ -131,9 +179,9 @@ const OwnerSidebar = ({ isOpen, onClose, unreadCount, collapsed }) => {
 
 /**
  * OwnerTopbar Component
- * Top navigation bar with app name and profile
+ * Modern top navigation bar with app name and profile
  */
-const OwnerTopbar = ({ onMenuClick, owner, collapsed, onToggleCollapse }) => {
+const OwnerTopbar = ({ onMenuClick, owner, collapsed }) => {
   // Get owner's initials for avatar
   const getInitials = (name) => {
     if (!name) return "O";
@@ -147,40 +195,28 @@ const OwnerTopbar = ({ onMenuClick, owner, collapsed, onToggleCollapse }) => {
 
   return (
     <header
-      className="bg-white shadow-sm border-b border-gray-200 z-30 sticky top-0"
+      className="bg-white/80 backdrop-blur-md shadow-sm border-b border-gray-200/60 z-30 sticky top-0"
       role="banner"
     >
-      <div className="flex items-center justify-between px-4 py-3 lg:px-6">
+      <div className="flex items-center justify-between px-4 py-4 lg:px-8">
         {/* Mobile Menu Button */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onMenuClick}
-            className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
-            aria-expanded="false"
-          >
-            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          {/* Desktop Collapse Toggle */}
-          <button
-            onClick={onToggleCollapse}
-            className="hidden lg:inline-flex p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            {collapsed ? (
-              <span className="text-gray-700">»</span>
-            ) : (
-              <span className="text-gray-700">«</span>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 text-gray-700 hover:text-gray-900"
+          aria-label="Toggle menu"
+          aria-expanded="false"
+        >
+          <Menu size={22} />
+        </button>
 
         {/* App/Restaurant Name */}
-        <div className="flex-1 lg:flex-none">
-          <h2 className="text-xl font-bold lg:text-2xl" style={{ color: PRIMARY_COLOR }}>
+        <div className="flex-1 lg:flex-none lg:ml-0 ml-4">
+          <h2 className="text-xl font-bold lg:text-2xl bg-gradient-to-r" style={{ 
+            background: `linear-gradient(135deg, ${PRIMARY_COLOR} 0%, #ff9d4d 100%)`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text"
+          }}>
             {owner?.restaurant?.name || "Yumify"}
           </h2>
         </div>
@@ -188,8 +224,11 @@ const OwnerTopbar = ({ onMenuClick, owner, collapsed, onToggleCollapse }) => {
         {/* Profile Avatar */}
         <div className="flex items-center gap-3">
           <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm"
-            style={{ backgroundColor: PRIMARY_COLOR }}
+            className="w-11 h-11 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg transition-transform duration-200 hover:scale-110 cursor-pointer"
+            style={{ 
+              backgroundColor: PRIMARY_COLOR,
+              boxShadow: `0 4px 14px 0 ${PRIMARY_COLOR}40`
+            }}
             aria-label={`Profile for ${owner?.name || "Owner"}`}
             title={owner?.name || "Owner"}
           >
@@ -328,12 +367,13 @@ const OwnerLayout = () => {
         onClose={closeSidebar}
         unreadCount={unreadCount}
         collapsed={collapsed}
+        onToggleCollapse={toggleCollapse}
       />
 
       {/* Main Content Area */}
-      <div className={`${collapsed ? "lg:pl-20" : "lg:pl-64"}`}>
+      <div className={`${collapsed ? "lg:pl-20" : "lg:pl-72"}`}>
         {/* Topbar */}
-        <OwnerTopbar onMenuClick={toggleSidebar} owner={owner} collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+        <OwnerTopbar onMenuClick={toggleSidebar} owner={owner} collapsed={collapsed} />
 
         {/* Page Content */}
         <main className="p-4 lg:p-6" role="main">
