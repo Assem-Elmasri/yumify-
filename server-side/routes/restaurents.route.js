@@ -1,19 +1,13 @@
-import express from "express";
-import Restaurant from "../models/restaurant.model.js";
-import { verifyToken } from "../utils/tokenVerify.util.js";
-import { upload } from "../middlewares/upload.middleware.js";
 
-const router = express.Router();
+const router = require("express").Router();
+const mongoose = require("mongoose");
+const restaurantSchema = require("../models/restaurant.model.js");
+const upload = require("../middlewares/upload.middleware.js");
+const { verifyToken } = require("../utils/tokenVerify.util.js");
 
-router.get("/", async (req, res) => {
-    try {
-        const restaurants = await Restaurant.find();
-        res.json(restaurants);
-    } catch (error) {
-        console.error("Error in GET / (restaurant.route):", error);
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
+
+// modify restaurent name or logo by owner
+const Restaurant = mongoose.model("Restaurant", restaurantSchema);
 
 router.put("/modify", upload.single('logo'), async (req, res) => {
     const { name } = req.body;
@@ -42,4 +36,4 @@ router.put("/modify", upload.single('logo'), async (req, res) => {
 
 
 
-export default router;
+module.exports = router;

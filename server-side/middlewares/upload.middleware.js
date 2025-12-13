@@ -1,4 +1,5 @@
-
+import { error } from "console";
+import e from "express";
 import multer from "multer"; // Import Multer for handling file uploads
 import path from "path"; // Import path module for handling file paths
 
@@ -21,11 +22,11 @@ const storage = multer.diskStorage({ // Configure storage settings for Multer
   },
 });
 
-export const upload = multer({ 
+const upload = multer({ 
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // Limit file size to 5MB
   fileFilter: (req, file, cb) => {
-    const fileTypes = /jpeg|jpg|png|webp/; // Allowed file types
+    const fileTypes = /jpeg|jpg|png/; // Allowed file types
     const extname = path.extname(file.originalname).toLowerCase(); // Get file extension
     // mimetype check is to ensure the file content matches the extension
     if (fileTypes.test(extname) && fileTypes.test(file.mimetype)) {// Check if file type is allowed

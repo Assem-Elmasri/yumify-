@@ -8,13 +8,6 @@ import cookieParser from "cookie-parser";
 import foodRoutes from "./routes/food.route.js";
 import cartRoutes from "./routes/cart.rotes.js";
 import userRoutes from "./routes/user.route.js";
-import orderRoutes from "./routes/order.route.js"
-import reviewRoutes from "./routes/review.route.js"
-import notifcationRoutes from "./routes/notification.route.js"
-import staffRoutes from "./routes/staff.route.js"
-import bookingRoutes from "./routes/booking.route.js"
-import restaurantRoutes from './routes/restaurents.route.js'
-import chatbotRoutes from "./routes/chatbot.route.js"
 import { connectDB } from "./config/db.js";
 
 dotenv.config(); // Load environment variables (.env file mongoDB connection, PORT, etc.)
@@ -34,13 +27,6 @@ console.log(path.join(__dirname, '../uploads'));
 app.use("/api/foods", foodRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/user", userRoutes);
-app.use('/api/orders', orderRoutes)
-app.use('/api/reviews', reviewRoutes)
-app.use('/api/notifications', notifcationRoutes)
-app.use('/api/restaurants', restaurantRoutes)
-app.use('/api/staff', staffRoutes)
-app.use('/api/booking', bookingRoutes)
-app.use('/api/chatbot', chatbotRoutes)
 app.use("/uploads", e.static(path.join(__dirname, "../uploads"))); // Serve static files from uploads directory
 
 const PORT = process.env.PORT || 5000;
