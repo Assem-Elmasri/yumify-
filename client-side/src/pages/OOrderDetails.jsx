@@ -24,7 +24,6 @@ const OrderDetails = () => {
         setLoading(true);
         const orderData = await orderAPI.get(`/trackOrder/${id}`);
         setOrder(orderData.data);
-        console.log("orderData::",orderData.data);
         // Fetch the current restaurant ID from API
         // Adjust the endpoint based on your API structure
         const restaurantData = await userAPI.get('/owner/restaurant'); // or '/owner/restaurant' or similar

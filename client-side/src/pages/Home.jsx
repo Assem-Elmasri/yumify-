@@ -43,13 +43,6 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    foodAPI
-      .get("getMenuForChatBot")
-      .then((res) => console.log(res.data))
-      .catch((err) => console.log(err));
-  }, []);
-
-  useEffect(() => {
     cartAPI
       .get("/")
       .then((res) => setCart(res?.data || null))

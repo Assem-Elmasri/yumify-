@@ -156,10 +156,6 @@ const Orders = () => {
         ...(search.trim() ? { search: search.trim() } : {}),
       };
       const allOrders = await ownerApi.getOrders(filterParams);
-
-      console.log('All orders:', allOrders);
-      console.log('Restaurant ID:', restaurantId);
-
       // Log first order structure to debug
       if (allOrders.length > 0) {
         console.log('First order structure:', JSON.stringify(allOrders[0], null, 2));
@@ -171,7 +167,6 @@ const Orders = () => {
       const userData = await ownerApi.me();
       const userRestaurantName = userData.restaurant?.name;
 
-      console.log('User restaurant name:', userRestaurantName);
 
       // Filter orders that belong to this restaurant
       const restaurantOrders = allOrders.filter((order) => {
@@ -183,7 +178,6 @@ const Orders = () => {
         return false;
       });
 
-      console.log('Restaurant orders:', restaurantOrders);
 
       // Apply filters
       let filteredOrders = restaurantOrders;
@@ -222,9 +216,6 @@ const Orders = () => {
           return customerName.includes(searchLower) || orderId.includes(searchLower) || orderNumber.includes(searchLower);
         });
       }
-
-      console.log('Filtered orders:', filteredOrders);
-
       // Pagination
       setTotal(filteredOrders.length);
       const start = (page - 1) * pageSize;
@@ -259,7 +250,6 @@ const Orders = () => {
   // Handle order status update
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      console.log('handleStatusUpdate called with:', { orderId, newStatus });
       
       // Validate orderId format
       if (!orderId || typeof orderId !== 'string') {
@@ -271,7 +261,6 @@ const Orders = () => {
       }
       
       await ownerApi.updateOrderStatus(orderId, newStatus);
-      console.log('Status update successful');
       
       // Local refresh; subscribe will also handle external updates
       refetch();

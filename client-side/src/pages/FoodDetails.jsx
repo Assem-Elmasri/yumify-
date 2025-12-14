@@ -38,7 +38,7 @@ const FoodDetails = () => {
       .get(`/get/${foodId}`)
       .then((response) => {
         setFoodDetails(response.data);
-        console.log("Food details:", response.data);
+
       })
       .catch((error) => {
         console.error("Error fetching food details:", error);
@@ -51,7 +51,7 @@ const FoodDetails = () => {
       .get(`/random-products`)
       .then((response) => {
         setRandomFoods(response.data || []);
-        console.log("Random foods:", response.data);
+
       })
       .catch((error) => {
         console.error("Error fetching random foods:", error);
@@ -132,7 +132,7 @@ const FoodDetails = () => {
         request: request,
       })
       .then((res) => {
-        console.log("Added to cart:", res.data);
+        console.log(res.data);
         toast.success("Added to cart successfully!");
       })
       .catch((err) => {

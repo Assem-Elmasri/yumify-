@@ -29,7 +29,6 @@ userAPI.post('/register',{
     password:createPassword,
     role:role
 }).then((res)=>{
-  console.log("Registration successful:", res.data);
     // Show success toast with better message
     toast.success("Registration successful! Please check your email to verify your account.", {
       duration: 5000,

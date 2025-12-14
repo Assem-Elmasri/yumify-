@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Check, ChefHat, Truck, PackageCheck, Phone } from "lucide-react";
+import { Check, ChefHat, Truck, PackageCheck, Phone, Home } from "lucide-react";
 import orderAPI from "../apis/order.api";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import SplashScreen from "./SplashScreen";
 import toast from "react-hot-toast";
 
 export default function OrderTracking() {
   const orderId = useParams().orderId;
+  const navigate = useNavigate();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -227,6 +228,14 @@ export default function OrderTracking() {
 
         {/* ACTION BUTTONS */}
         <div className="flex flex-col md:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => navigate("/")}
+            className="w-full md:w-auto bg-gray-600 text-white font-medium py-3 px-8 rounded-full shadow-lg hover:bg-gray-700 transition-all duration-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+          >
+            <Home className="inline-block -mt-1 mr-2 w-4 h-4" />
+            Return to Home
+          </button>
+
           <button
             onClick={() => toast.error("You can't reach out to this restaurant at the moment...")}
             className="w-full md:w-auto bg-orange-600 text-white font-medium py-3 px-8 rounded-full shadow-lg hover:bg-orange-700 transition-all duration-300"

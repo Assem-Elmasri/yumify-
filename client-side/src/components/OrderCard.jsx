@@ -154,7 +154,6 @@ const OrderCard = ({ order, onStatusUpdate }) => {
             <button
               key={button.status}
               onClick={() => {
-                console.log('OrderCard button clicked:', { orderId: order.id, status: button.status });
                 onStatusUpdate(order.id, button.status);
               }}
               className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow-md ${button.color}`}

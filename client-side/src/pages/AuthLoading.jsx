@@ -1,14 +1,6 @@
-import React, { useEffect } from "react";
 
 const AuthLoading = () => {
-  useEffect(() => {
-    // يا عاصم شوف هتحط الدايركشن فين هههههه بهزر معاك
-    //  مثال بسيط لإعادة التوجيه بعد 3 ثواني (اختياري)
-    // const timer = setTimeout(() => {
-    //   window.location.href = "/dashboard";
-    // }, 3000);
-    // return () => clearTimeout(timer);
-  }, []);
+
 
   const BG_URL =
     "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1600&q=80";

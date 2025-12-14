@@ -140,7 +140,7 @@ const Notifications = () => {
 
       {/* Filters */}
       <div className="bg-white dark:bg-[#071826] rounded-lg shadow-sm border border-gray-200 dark:border-[#23303a] p-4 flex flex-wrap gap-3 items-center">
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {[
             { value: "all", label: "All" },
             { value: "order", label: "Orders" },

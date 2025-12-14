@@ -53,10 +53,7 @@ const Feedback = () => {
       </div>
     );
   }
-
-  console.log("Feedback:", feedback);
-
-  return (
+return (
     <div className="space-y-6">
       {/* Header */}
       <div>

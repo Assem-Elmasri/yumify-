@@ -475,7 +475,7 @@ const initMockApi = () => {
     },
   ];
 
-  console.log("Mock API initialized with dummy data");
+
 };
 
 // Authentication module

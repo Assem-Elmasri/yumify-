@@ -479,7 +479,6 @@ const MenuModal = ({ item, onClose, onSave, categories }) => {
     image: null,
     available: true,
   });
-  console.log("MenuModal item",item);
   useEffect(() => {
     if (item) {
       setFormData({

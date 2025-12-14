@@ -32,7 +32,7 @@ export default function PaymentCheckout() {
   .catch((err) => {
     console.log(err)
   })
-})
+},[])
 
   const handlePayNow = () => {
     // Validation based on payment method
@@ -144,8 +144,6 @@ export default function PaymentCheckout() {
         paymentMethod: paymentMethod,
       })
       .then((response) => {
-        console.log("Checkout response:", response.data);
-        
         const orderId = response.data?.order?._id;
         
         // Show success message
@@ -212,9 +210,6 @@ export default function PaymentCheckout() {
     setPaymentMethod("creditCard");
   }, []);
 
-  console.log("cart items:", cart?.items);
-
-  // Safe calculations with null checks
   let totalAmount =
     cart?.items?.reduce((total, item) => {
       const price = item?.food?.price || 0;

@@ -46,19 +46,18 @@ const Invoice = () => {
   };
 
   return (
-    <div className="font-['Poppins',_sans-serif] bg-[#f8f9fa] dark:bg-[#071018] text-[#333] dark:text-gray-100 p-5 w-full max-w-full">
+    <div className="font-['Poppins',_sans-serif] bg-[#f8f9fa] dark:bg-[#071018] text-[#333] dark:text-gray-100 p-5 w-full max-w-full max-h-full min-h-screen">
       <div className="invoice-container max-w-[800px] w-full my-[30px] mx-auto bg-[#fff] dark:bg-[#0b1220] border-[3px] border-solid border-[#FFBE86] dark:border-[#4b2f14] rounded-[8px] shadow-md dark:shadow-[0_10px_30px_rgba(2,6,23,0.6)] p-[40px] max-xs:p-[13px]">
 
         {/* Header */}
         <div className="invoice-header flex flex-wrap justify-between items-center border-b-[1px_solid_#eee] dark:border-b-[1px_solid_rgba(255,255,255,0.04)] pb-[20px] mb-[20px]">
           <h1 className="yumify-logo-text font-['Pacifico',cursive] text-prim text-[40px] max-sm:text-[30px] flex items-center">
-            <button onClick={() => navigator('/')} className="mr-2 text-gray-700 dark:text-gray-200">
+            <button onClick={() => navigator('/')} className="mr-2 text-gray-700 dark:text-gray-200 flex items-center">
               <ArrowLeft size={32} />
             </button>
             Yumify
           </h1>
-
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100 max-sm:text-[25px]">
+          <h2 className="text-3xl font-bold text-gray-800  dark:text-gray-100 max-sm:text-[25px]">
             INVOICE
           </h2>
         </div>

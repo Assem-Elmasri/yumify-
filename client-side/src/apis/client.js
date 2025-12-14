@@ -128,8 +128,7 @@ const ownerApi = {
           restaurantName: subOrder.restaurant?.name || 'Your Restaurant'
         }));
       });
-      
-      console.log('Transformed orders:', transformedOrders); // Debug log
+
       return transformedOrders;
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -148,10 +147,7 @@ const ownerApi = {
 
   async updateOrderStatus(orderId, newStatus) {
     try {
-      console.log('updateOrderStatus called with:', { orderId, newStatus });
-      
-      // Parse orderId to extract main order ID and sub-order ID
-      // Format expected: "mainOrderId-subOrderId"
+
       if (!orderId || typeof orderId !== 'string') {
         throw new Error('Invalid order ID');
       }
@@ -163,16 +159,14 @@ const ownerApi = {
       }
 
       const [mainOrderId, subOrderId] = parts;
-      
-      console.log('Parsed IDs:', { mainOrderId, subOrderId });
+
 
       // Update specific sub-order status
       const response = await apiClient.patch(
         `/orders/subOrder/${mainOrderId}/${subOrderId}/status`,
         { status: newStatus }
       );
-      
-      console.log('Update response:', response.data);
+
       return response?.data?.order || null;
     } catch (error) {
       console.error('Error updating order status:', error);

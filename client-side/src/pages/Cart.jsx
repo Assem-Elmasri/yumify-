@@ -11,6 +11,8 @@ const Cart = () => {
   const [cart, setCart] = useState(null);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [subtotal, setSubtotal] = useState(0);
+  const [checked, setChecked] = useState(false);
   const navigator = useNavigate();
 
   useEffect(() => {
@@ -33,15 +35,19 @@ const Cart = () => {
     fetchData();
   }, []);
 
-  // Safe calculations with null checks
-  const subtotal = cart?.items?.reduce((total, item) => {
-    const price = item?.food?.price || 0;
-    const quantity = item?.quantity || 0;
-    return total + (price * quantity);
-  }, 0) || 0;
+  useEffect(() => {
+    if (cart && cart.items) {
+      const newSubtotal = cart.items.reduce((acc, item) => {
+        const itemPrice = item.food?.price || 0;
+        const itemQuantity = item?.quantity || 0;
+        return acc + itemPrice * itemQuantity;
+      }, 0);
+      setSubtotal(newSubtotal);
+    }
+  },[cart,]);
 
   const TAX_RATE = 0.05;
-  const DELIVERY_FEE = 5.00;
+  const DELIVERY_FEE = checked ? 5.00 : 0.00;
 
   const taxes = subtotal * TAX_RATE;
   const total = subtotal + taxes + DELIVERY_FEE;
@@ -122,9 +128,9 @@ const Cart = () => {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        value=""
+                        value={checked}
                         className="sr-only peer"
-                        defaultChecked
+                        onChange={() => setChecked(!checked)}
                       />
                       <div className="w-11 h-6 bg-gray-200 dark:bg-gray-800/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
                     </label>

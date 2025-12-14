@@ -38,12 +38,8 @@ export default function EmailVerification() {
     if (isDisabled) return;
 
     showInputToast(async (email) => {
-      console.log(email);
       try {
         await userAPI.post('/resend-verification', { email });
-        console.log('resend request is sent');
-        
-        // Set cooldown
         const cooldownEnd = Date.now() + 60000; // 60 seconds
         localStorage.setItem('resendCooldown', cooldownEnd.toString());
         setCountdown(60);

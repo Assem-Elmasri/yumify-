@@ -34,7 +34,6 @@ const ODashboard = () => {
         
         // First get user to find restaurant ID
         const user = await ownerApi.me();
-        console.log('user from ODashboard:', user);
         
         if (!user.restaurant || !user.restaurant._id) {
           throw new Error("User does not have a restaurant");
@@ -44,7 +43,6 @@ const ODashboard = () => {
         
         // Fetch dashboard data from new endpoint
         const response = await userAPI.get(`/dashboard/${restaurantId}`);
-        console.log('Dashboard data:', response.data);
         
         if (response.data.success) {
           setDashboardData(response.data.data);
