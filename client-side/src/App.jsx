@@ -31,6 +31,8 @@ import Suppliers from "./pages/Suppliers";
 import Feedback from "./pages/Feedback";
 import ThemeProvider from "./context/ThemeContext";
 import Chatbot from "./components/Chatbot";
+import TokenExpired from "./pages/TokenExpired";
+import AlreadyVerified from "./pages/AlreadyVerified";
 
 function App() {
   return (
@@ -51,6 +53,8 @@ function App() {
         <Route path="/emailVerfication" element={<EmailVerification/>} />
         <Route path="/invoice/:orderId" element={<ProtectedRoute><Invoice/></ProtectedRoute>} />
         <Route path="/forgotPassword" element={<ForgotPassword/>} />
+        <Route path="/tokenExpired" element={<TokenExpired/>} />
+        <Route path="/alreadyVerified" element={<AlreadyVerified/>} />
         {/* Owner routes */}
         <Route path="" element={<OwnerRoute />}>
         <Route element={<OwnerLayout />}>
