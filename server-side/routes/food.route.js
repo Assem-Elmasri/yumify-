@@ -1,23 +1,30 @@
 import e from "express";
 import mongoose from "mongoose";
-import foodSchema from "../models/food.model.js";
-import restaurantSchema from "../models/restaurant.model.js";
+import Food from "../models/food.model.js";
+import Restaurant from "../models/restaurant.model.js";
 import upload from "../middlewares/upload.middleware.js";
 import { verifyToken } from "../utils/tokenVerify.util.js";
-import reviewSchema from "../models/review.model.js";
+import Review from "../models/review.model.js";
 
 const router = e.Router();
 
-// Create Food Model
-const Food = mongoose.model("Food", foodSchema);
-const Restaurant = mongoose.model("Restaurant",restaurantSchema);
-const Review = mongoose.model("Review",reviewSchema) 
+router.get('/getMenuForChatBot', async (req, res) => {
+    try {
+        const foods = await Food.find()
+            .select('name category price description restaurant') 
+            .populate('restaurant', 'name'); 
+        res.json(foods);
+    } catch (error) {
+        console.error('Error in GET /getMenuForChatBot (food.route):', error);
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
 
 // Route to get all food items
 // Note: paths here are relative to where the router is mounted (e.g. /api/foods)
 router.get("/", async (req, res) => {
     try {
-        const foods = await Food.find(); // FEtch all food items from the database
+        const foods = await Food.find().populate("restaurant"); // FEtch all food items from the database
         res.json(foods); // Return the list of food items as JSON
     } catch (error) {
         console.error("Error in GET / (food.route):", error); // log for debugging
@@ -70,7 +77,14 @@ router.get("/search", async (req, res) => {
 router.get("/get/:foodId", async (req, res) => {
     const { foodId } = req.params;
     try {
-        const foodItem = await Food.findById(foodId).populate('reviews');
+        const foodItem = await Food.findById(foodId)
+  .populate({
+    path: "reviews",
+    populate: {
+      path: "user",
+      select: "-password"
+    }
+  });
         if (!foodItem) {
             return res.status(404).json({ message: "Food item not found" });
         }
@@ -96,7 +110,8 @@ router.post("/add", upload.single('image'), async (req, res) => {
             console.log("No restaurant found for owner with ID:", token.id);
             return res.status(404).json({ message: "Restaurant not found for this owner" });
         }
-        const imageUrl = req.file ? req.file.filename : null;
+        // Get image URL - works with both Cloudinary and local storage
+        const imageUrl = req.file ? (req.file.path || req.file.filename) : null;
         console.log("Received new food data:", req.body, "Image file:", req.file);
         const newFood = new Food({
             name,
@@ -122,9 +137,11 @@ router.post("/add", upload.single('image'), async (req, res) => {
 //Route to modify existing food item
 router.put("/modify/:foodId", async (req, res) => {
     const { foodId } = req.params;
-    const { name, description, price, category, imageUrl } = req.body;
+    const { name, description, price, category, imageUrl , availability } = req.body;
     try {
-        const updatedFood = await Food.findByIdAndUpdate(foodId, { name, description, price, category, imageUrl }, { new: true });
+        const FOODID = new mongoose.Types.ObjectId(foodId);
+        console.log("FOODID:", FOODID);
+        const updatedFood = await Food.findByIdAndUpdate(FOODID, { name, description, price, category, imageUrl , availability }, { new: true });
         if (!updatedFood) {
             return res.status(404).json({ message: "Food item not found" });
         }

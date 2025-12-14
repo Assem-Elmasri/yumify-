@@ -1,13 +1,19 @@
+import express from "express";
+import Restaurant from "../models/restaurant.model.js";
+import { verifyToken } from "../utils/tokenVerify.util.js";
+import { upload } from "../middlewares/upload.middleware.js";
 
-const router = require("express").Router();
-const mongoose = require("mongoose");
-const restaurantSchema = require("../models/restaurant.model.js");
-const upload = require("../middlewares/upload.middleware.js");
-const { verifyToken } = require("../utils/tokenVerify.util.js");
+const router = express.Router();
 
-
-// modify restaurent name or logo by owner
-const Restaurant = mongoose.model("Restaurant", restaurantSchema);
+router.get("/", async (req, res) => {
+    try {
+        const restaurants = await Restaurant.find();
+        res.json(restaurants);
+    } catch (error) {
+        console.error("Error in GET / (restaurant.route):", error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
 
 router.put("/modify", upload.single('logo'), async (req, res) => {
     const { name } = req.body;
@@ -24,7 +30,8 @@ router.put("/modify", upload.single('logo'), async (req, res) => {
             restaurant.name = name;
         }
         if (req.file) {
-            restaurant.logoUrl = req.file.filename;
+            // Get image URL - works with both Cloudinary and local storage
+            restaurant.logoUrl = req.file.path || req.file.filename;
         }
         await restaurant.save();
         res.status(200).json({ message: "Restaurant details updated successfully", restaurant });
@@ -36,4 +43,4 @@ router.put("/modify", upload.single('logo'), async (req, res) => {
 
 
 
-module.exports = router;
+export default router;

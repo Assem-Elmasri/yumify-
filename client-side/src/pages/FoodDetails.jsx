@@ -1,19 +1,38 @@
-import { ArrowLeft, ShoppingCartIcon, Star, Clock , Send } from "lucide-react";
-import { useLayoutEffect, useState } from "react";
+import { ArrowLeft, ShoppingCartIcon, Star, Clock, Send } from "lucide-react";
+import { useLayoutEffect, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import Review from "../components/review";
 import foodAPI from "../apis/food.api";
 import cartApi from "../apis/cart.api";
-const FileDetails = () => {
+import reviewAPI from "../apis/review.api";
+import userAPI from "../apis/user.api";
+import toast from "react-hot-toast";
+import { getImageUrl, UPLOADS_BASE_URL } from "../utils/config";
+
+const FoodDetails = () => {
   const [counter, setCounter] = useState(1);
   const [request, setRequest] = useState("");
   const [foodDetails, setFoodDetails] = useState(null);
   const [randomFoods, setRandomFoods] = useState([]);
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [reviewComment, setReviewComment] = useState("");
+  const [userData, setUserData] = useState(null);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   const navigator = useNavigate();
   const foodId = useParams().foodid;
+
+  // Fetch user data
+  useEffect(() => {
+    userAPI
+      .get("/profile")
+      .then((res) => setUserData(res?.data || null))
+      .catch(() => setUserData(null));
+  }, []);
+
+  // Fetch food details
   useLayoutEffect(() => {
     foodAPI
       .get(`/get/${foodId}`)
@@ -25,82 +44,162 @@ const FileDetails = () => {
         console.error("Error fetching food details:", error);
       });
   }, [foodId]);
+
+  // Fetch random foods
   useLayoutEffect(() => {
     foodAPI
       .get(`/random-products`)
       .then((response) => {
-        setRandomFoods(response.data);
+        setRandomFoods(response.data || []);
         console.log("Random foods:", response.data);
       })
       .catch((error) => {
         console.error("Error fetching random foods:", error);
       });
   }, []);
+
+  // Fetch reviews for this food item
+  useLayoutEffect(() => {
+    if (!foodId) return;
+    
+    reviewAPI
+      .get(`/food/${foodId}`)
+      .then((response) => {
+        setReviews(Array.isArray(response.data) ? response.data : []);
+      })
+      .catch((error) => {
+        console.error("Error fetching reviews:", error);
+        setReviews([]);
+      });
+  }, [foodId]);
+
+  // Handle review submission
+  const handleSubmitReview = async () => {
+    if (!userData) {
+      toast.error("Please login to submit a review");
+      navigator("/login");
+      return;
+    }
+
+    if (rating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+
+    if (!reviewComment.trim()) {
+      toast.error("Please write a comment");
+      return;
+    }
+
+    setIsSubmittingReview(true);
+
+    try {
+      const response = await reviewAPI.post("/add", {
+        foodId: foodId,
+        restaurantId: foodDetails?.restaurant?._id || foodDetails?.restaurant,
+        rating: rating,
+        comment: reviewComment.trim(),
+      });
+
+      setReviews([response.data, ...reviews]);
+      
+      setReviewComment("");
+      setRating(0);
+      setHovered(0);
+
+      toast.success("Review submitted successfully!");
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      const errorMsg = error.response?.data?.message || "Failed to submit review";
+      toast.error(errorMsg);
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
+
+  // Handle add to cart
+  const handleAddToCart = () => {
+    if (!userData) {
+      toast.error("Please login to add items to cart");
+      navigator("/login");
+      return;
+    }
+
+    cartApi
+      .post("/addToCart", {
+        foodId: foodDetails._id,
+        quantity: counter,
+        request: request,
+      })
+      .then((res) => {
+        console.log("Added to cart:", res.data);
+        toast.success("Added to cart successfully!");
+      })
+      .catch((err) => {
+        console.error("Error adding to cart:", err);
+        toast.error("Failed to add to cart");
+      });
+  };
+  console.log("Food details:", foodDetails);
+
   return (
-    <>
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#071018]">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm shadow-sm">
         <nav className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-20 items-center justify-between">
-            {/* Left Side: Back Arrow and Logo */}
             <div className="flex items-center gap-4">
               <button
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
                 onClick={() => navigator("/")}
                 aria-label="Back to Menu"
               >
-                {/* Lucide icon: arrow-left */}
                 <ArrowLeft />
               </button>
-              <span className="font-poppins text-2xl font-bold text-orange-brand">
+              <span className="font-poppins text-2xl font-bold text-orange-500 dark:text-orange-400">
                 Yumify
               </span>
             </div>
 
-            {/* Right Side: Cart and Profile */}
             <div className="flex items-center gap-4">
               <button
-                className="relative text-gray-600 hover:text-gray-900 transition-colors"
-                onClick={() => {
-                  navigator("/cart");
-                }}
+                className="relative text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white transition-colors"
+                onClick={() => navigator("/cart")}
                 aria-label="Open Cart"
               >
-                {/* Lucide icon: shopping-cart */}
                 <ShoppingCartIcon />
-                {/* High contrast badge: Orange bg, dark text */}
-                <span
-                  id="cart-badge"
-                  className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-orange-brand text-gray-900 text-xs font-bold transition-all duration-300 transform scale-0"
-                >
-                  0
-                </span>
+                
               </button>
               <button
-                className="h-10 w-10 p-1 rounded-full hover:ring-2 hover:ring-gray-300 transition-all"
-                onClick={() => {
-                  navigator("/profile");
-                }}
+                className="h-10 w-10 p-1 rounded-full hover:ring-2 hover:ring-gray-300 dark:hover:ring-gray-700 transition-all"
+                onClick={() => navigator("/profile")}
                 aria-label="Open Profile"
               >
                 <img
-                  src='http://localhost:5000/uploads/users/def.svg'
+                  src={
+                    userData?.imageUrl
+                      ? getImageUrl(userData.imageUrl, 'users')
+                      : `${UPLOADS_BASE_URL}/users/def.svg`
+                  }
                   alt="Profile Avatar"
-                  className="h-full w-full object-cover"
+                  className="h-full w-full object-cover rounded-full"
                 />
               </button>
             </div>
           </div>
         </nav>
       </header>
-      <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 md:gap-16">
+
+      {/* Main Content */}
+      <main className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
           {/* Left Column: Food Image */}
           <div className="mb-8 lg:mb-0">
-            <div className="aspect-square w-[full] overflow-hidden rounded-3xl shadow-xl">
+            <div className="aspect-square w-full overflow-hidden rounded-3xl shadow-xl bg-gray-100 dark:bg-[#0b1420]">
               <img
                 src={
                   foodDetails
-                    ? `http://localhost:5000/uploads/foods/${foodDetails.imageUrl}`
+                    ? getImageUrl(foodDetails.imageUrl, 'foods')
                     : "https://via.placeholder.com/400"
                 }
                 alt={foodDetails?.name || "Food Item"}
@@ -109,84 +208,73 @@ const FileDetails = () => {
             </div>
           </div>
 
+          {/* Right Column: Food Details */}
           <div className="flex flex-col">
-            <h1 className="font-poppins text-4xl font-bold text-gray-900 mb-3">
-              {foodDetails?.name}
+            <h1 className="font-poppins text-3xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+              {foodDetails?.name || "Loading..."}
             </h1>
 
-            {/* Description */}
-            <p className="text-lg text-gray-600 mb-4">
-              {foodDetails?.description}
+            <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
+              {foodDetails?.description || ""}
             </p>
 
             {/* Rating and Time */}
-            <div className="flex flex-wrap items-center gap-4 mb-4">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
               <button
-                id="rating-link"
                 className="flex items-center gap-2"
                 aria-label="Scroll to reviews"
+                onClick={() => document.getElementById("reviews")?.scrollIntoView({ behavior: "smooth" })}
               >
                 <div className="flex text-yellow-400">
-                  {/* Lucide icon: star (filled) */}
-                  {[...Array(5)].map((_, index) => {
-  return (
-    <Star
-      key={index}
-      onClick={() => setRating(index + 1)}
-      onMouseEnter={() => setHovered(index + 1)}
-      onMouseLeave={() => setHovered(rating)}
-      className={`cursor-pointer transition 
-        ${(index + 1) <= (hovered || rating) ? "fill-yellow-400 text-yellow-400" : "fill-none text-gray-400"}
-      `}
-      size={24}
-    />
-  );
-})}
-
+                  {[...Array(5)].map((_, index) => (
+                    <Star
+                      key={index}
+                      className={`${index < (foodDetails?.rating || 0) ? "fill-yellow-400" : "fill-none"} text-yellow-400`}
+                      size={20}
+                    />
+                  ))}
                 </div>
-                <span className="text-gray-600 font-medium hover:underline">
-                  ({foodDetails?.reviews?.length || "no"} Reviews)
+                <span className="text-gray-600 dark:text-gray-400 font-medium hover:underline">
+                  ({reviews.length} {reviews.length === 1 ? "Review" : "Reviews"})
                 </span>
               </button>
-              <span className="text-gray-400 hidden sm:inline">|</span>
-              <span className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1 text-sm font-medium text-gray-700">
-                {/* Lucide icon: clock */}
-                <Clock />
+              <span className="text-gray-300 dark:text-gray-600 hidden sm:inline">|</span>
+              <span className="flex items-center gap-2 rounded-full bg-gray-100 dark:bg-[#0f1724] px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Clock size={16} />
                 Ready in 15–20 mins
               </span>
             </div>
 
             {/* Price */}
-            <p className="font-poppins text-5xl font-bold text-brand-orange mb-6">
-              ${foodDetails?.price || "not available"}
+            <p className="font-poppins text-4xl md:text-5xl font-bold text-orange-500 dark:text-orange-400 mb-6">
+              ${foodDetails?.price || "N/A"}
             </p>
 
-            {/* Divider */}
-            <hr className="border-gray-200 mb-6" />
+            <hr className="border-gray-200 dark:border-gray-800 mb-6" />
 
-            {/* Ingredients (What it comes with) */}
-            {foodDetails && foodDetails.ingredients !== null || foodDetails?.ingredients?.length > 0 && (
+            {/* Ingredients */}
+            {foodDetails?.ingredients && foodDetails.ingredients.length > 0 && (
               <>
-                <h3 className="text-xl font-poppins font-bold text-gray-800 mb-3">
-              Ingredients
-            </h3>
-            <div className="flex flex-wrap gap-3 mb-6">
-              {foodDetails?.ingredients?.map((ingredient, index) => (
-                <span
-                  key={index}
-                  className="rounded-full bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
-                >
-                  {ingredient}
-                </span>
-              ))}
-            </div>
+                <h3 className="text-lg md:text-xl font-poppins font-bold text-gray-800 dark:text-gray-100 mb-3">
+                  Ingredients
+                </h3>
+                <div className="flex flex-wrap gap-2 mb-6">
+                  {foodDetails.ingredients.map((ingredient, index) => (
+                    <span
+                      key={index}
+                      className="rounded-full bg-gray-100 dark:bg-[#0f1724] px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
+                      {ingredient}
+                    </span>
+                  ))}
+                </div>
               </>
             )}
 
             {/* Special Request */}
             <label
-              for="special-request"
-              className="text-xl font-poppins font-bold text-gray-800 mb-3"
+              htmlFor="special-request"
+              className="text-lg md:text-xl font-poppins font-bold text-gray-800 dark:text-gray-100 mb-3"
             >
               Add a note or special request:
             </label>
@@ -194,50 +282,43 @@ const FileDetails = () => {
             <textarea
               id="special-request"
               rows="3"
-              className="w-full rounded-2xl border-2 border-gray-300 p-4 text-gray-700 bg-white transition-all resize-none 
-                           hover:border-orange-brand 
-                           focus:border-orange-brand focus:outline-none focus:ring-0"
+              className="w-full rounded-2xl border-2 border-gray-200 dark:border-[#25313a] p-4 text-gray-700 dark:text-gray-100 bg-white dark:bg-[#0b1420] transition-all resize-none hover:border-orange-500 focus:border-orange-500 focus:outline-none focus:ring-0 mb-6"
               placeholder="No onions, extra cheese, etc."
               value={request}
-              onChange={(e)=>{setRequest(e.target.value)}}
+              onChange={(e) => setRequest(e.target.value)}
             ></textarea>
 
-            {/* Spacer to push button to bottom on desktop */}
-            <div className="flex-grow"></div>
-
             {/* Action Row: Quantity and Add to Cart */}
-            <div className="mt-8 flex flex-col md:flex-row items-center gap-6">
+            <div className="mt-auto flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
               {/* Quantity Selector */}
-              <div className="flex h-16 w-full md:w-auto items-center justify-between rounded-2xl bg-gray-100 p-2 shadow-inner">
+              <div className="flex h-14 sm:h-16 items-center justify-between rounded-2xl bg-gray-100 dark:bg-[#0b1420] p-2 shadow-sm">
                 <button
-                  id="qty-minus"
                   onClick={() => {
-                    if(counter==1) return;  
+                    if (counter === 1) return;
                     setCounter((prev) => prev - 1);
                   }}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-3xl font-bold text-orange-brand shadow transition-all active:scale-90"
+                  className="flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-xl bg-white dark:bg-[#0f1724] text-2xl sm:text-3xl font-bold text-orange-500 shadow transition-all hover:bg-gray-50 dark:hover:bg-[#15202b] active:scale-90"
                   aria-label="Decrease quantity"
                 >
                   -
                 </button>
                 <input
-                  id="qty-input"
                   type="number"
                   value={counter}
-                  onChange={(e)=>{
-                    if(e.target.value>25 || e.target.value<1 ) return;
-                    setCounter(Number(e.target.value));
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val > 25 || val < 1) return;
+                    setCounter(val);
                   }}
-                  className="h-full w-16 border-none bg-transparent text-center text-2xl font-bold text-gray-900 focus:ring-0 focus:outline-none"
+                  className="h-full w-16 border-none bg-transparent text-center text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 focus:ring-0 focus:outline-none"
                   aria-label="Current quantity"
                 />
                 <button
-                  id="qty-plus"
                   onClick={() => {
-                    if(counter==25) return;  
+                    if (counter === 25) return;
                     setCounter((prev) => prev + 1);
                   }}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-3xl font-bold text-orange-brand shadow transition-all active:scale-90"
+                  className="flex h-10 sm:h-12 w-10 sm:w-12 items-center justify-center rounded-xl bg-white dark:bg-[#0f1724] text-2xl sm:text-3xl font-bold text-orange-500 shadow transition-all hover:bg-gray-50 dark:hover:bg-[#15202b] active:scale-90"
                   aria-label="Increase quantity"
                 >
                   +
@@ -246,91 +327,115 @@ const FileDetails = () => {
 
               {/* Add to Cart Button */}
               <button
-                id="add-to-cart-btn"
-                onClick={()=>{cartApi.post('/addToCart',{
-                  foodId:foodDetails._id,
-                  quantity:counter,
-                  request:request
-                }).then((res)=>{
-                    console.log("Added to cart:",res.data);
-                  
-                  }).catch((err)=>{
-                    console.error("Error adding to cart:",err);
-                  });
-                }}
-                className="flex h-16 w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-brand-orange to-brand-darkOrange px-8 py-4 text-xl font-bold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:from-orange-brand-dark hover:to-orange-brand-darker active:scale-95"
+                onClick={handleAddToCart}
+                className="flex h-14 sm:h-16 flex-1 items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-500 to-orange-600 px-6 sm:px-8 py-4 text-lg sm:text-xl font-bold text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:from-orange-600 hover:to-orange-700 active:scale-95"
               >
-                {/* Lucide icon: shopping-cart */}
-                <ShoppingCartIcon />
-                <span id="add-to-cart-text">Add to Cart</span>
+                <ShoppingCartIcon size={20} />
+                <span>Add to Cart</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* 3. Additional Sections */}
+        {/* Additional Sections */}
         <div className="mt-16 md:mt-24">
           {/* Recommended Items */}
           <section className="mb-16">
-            <h2 className="font-poppins text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="font-poppins text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               You Might Also Like
             </h2>
-            <div className="grid grid-cols-1 gap-x-6 gap-y-20 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
               {randomFoods.map((food) => (
-                <div key={food._id} className="group relative my-4" onClick={()=>navigator(`/food/${food._id}`)}>
-                  <div className="aspect-h-1 aspect-w-1 h-full w-full overflow-hidden rounded-2xl bg-gray-200 lg:aspect-none group-hover:opacity-75 lg:h-80 transition-all">
+                <div
+                  key={food._id}
+                  className="group relative cursor-pointer"
+                  onClick={() => navigator(`/food/${food._id}`)}
+                >
+                  <div className="aspect-square w-full overflow-hidden rounded-2xl bg-gray-200 dark:bg-[#0b1420] group-hover:opacity-75 transition-all">
                     <img
-                      src={`http://localhost:5000/uploads/foods/${food.imageUrl}`}
-                      alt={`${food.name}`}
-                      className="h-full w-full object-cover object-center lg:h-full lg:w-full"
+                      src={getImageUrl(food.imageUrl, 'foods')}
+                      alt={food.name}
+                      className="h-full w-full object-cover object-center"
                     />
                   </div>
-                  <div className="mt-4 flex justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">
-                        <a href="#" className="hover:underline">
-                          {food.name}
-                        </a>
+                  <div className="mt-3 flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100 truncate">
+                        {food.name}
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500">
+                      <p className="mt-1 text-xs sm:text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                         {food.description}
                       </p>
                     </div>
-                    <p className="text-lg font-bold text-orange-brand">
-                      {" "}
-                      ${food.price}{" "}
+                    <p className="text-sm sm:text-base font-bold text-orange-500 dark:text-orange-400 whitespace-nowrap">
+                      ${food.price}
                     </p>
                   </div>
                 </div>
               ))}
             </div>
           </section>
+
           {/* Customer Reviews */}
           <section id="reviews">
-            <h2 className="font-poppins text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="font-poppins text-2xl md:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-6">
               What People Are Saying
             </h2>
-            {/* TextArea to add review */}
-            <textarea
-              name="NewReview"
-              id="NewRevieww"
-              rows="3"
-              className="w-full rounded-2xl border-2 border-gray-300 p-4 text-gray-700 bg-white transition-all resize-none 
-                           hover:border-orange-brand 
-                           focus:border-orange-brand focus:outline-none focus:ring-0"
-              placeholder={
-                foodDetails?.reviews.length !== 0
-                  ? "open to Share your thoughts?"
-                  : "Be the first Review for this product?"
-              }
-            ></textarea>
-            <div className="space-y-6">
-              {foodDetails?.reviews?.length > 0 ? (
-                foodDetails.reviews.map((review) => (
+
+            {/* Add Review Form */}
+            <div className="mb-8 p-4 sm:p-6 bg-white dark:bg-[#0b1420] rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-4">
+                <span className="font-medium text-gray-700 dark:text-gray-300">Your Rating:</span>
+                <div className="flex">
+                  {[...Array(5)].map((_, index) => (
+                    <Star
+                      key={index}
+                      onClick={() => setRating(index + 1)}
+                      onMouseEnter={() => setHovered(index + 1)}
+                      onMouseLeave={() => setHovered(rating)}
+                      className={`cursor-pointer transition ${
+                        index + 1 <= (hovered || rating)
+                          ? "fill-yellow-400 text-yellow-400"
+                          : "fill-none text-gray-400 dark:text-gray-600"
+                      }`}
+                      size={24}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              <textarea
+                name="NewReview"
+                id="NewReview"
+                rows="4"
+                className="w-full rounded-2xl border-2 border-gray-200 dark:border-[#25313a] p-4 text-gray-700 dark:text-gray-100 bg-white dark:bg-[#071018] transition-all resize-none hover:border-orange-500 focus:border-orange-500 focus:outline-none focus:ring-0 mb-4"
+                placeholder={
+                  reviews.length === 0
+                    ? "Be the first to review this product!"
+                    : "Share your thoughts about this dish..."
+                }
+                value={reviewComment}
+                onChange={(e) => setReviewComment(e.target.value)}
+              ></textarea>
+
+              <button
+                onClick={handleSubmitReview}
+                disabled={isSubmittingReview}
+                className="flex items-center justify-center gap-2 w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-orange-500 text-white text-base sm:text-lg font-bold rounded-xl hover:bg-orange-600 transition-all shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Send size={18} />
+                {isSubmittingReview ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+
+            {/* Reviews List */}
+            <div className="space-y-4 sm:space-y-6">
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
                   <Review key={review._id} reviewObj={review} />
                 ))
               ) : (
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-400 text-center py-8 text-sm sm:text-base">
                   No reviews yet. Be the first to review this item!
                 </p>
               )}
@@ -338,8 +443,8 @@ const FileDetails = () => {
           </section>
         </div>
       </main>
-    </>
+    </div>
   );
 };
 
-export default FileDetails;
+export default FoodDetails;

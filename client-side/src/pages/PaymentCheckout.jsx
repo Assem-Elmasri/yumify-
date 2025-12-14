@@ -3,16 +3,18 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import cartAPI from "../apis/cart.api";
 import { ArrowLeft } from "lucide-react";
+import userAPI from "../apis/user.api";
 
 export default function PaymentCheckout() {
   const [paymentMethod, setPaymentMethod] = useState("creditCard");
   const [showBack, setShowBack] = useState(false);
   const [walletSelected, setWalletSelected] = useState("");
   const [walletNumber, setWalletNumber] = useState("");
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(null);
   const [processing, setProcessing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const navigator = useNavigate();
-
 
   // card state as an object
   const [card, setCard] = useState({
@@ -22,7 +24,15 @@ export default function PaymentCheckout() {
     cvv: "",
   });
 
-  
+  useEffect(() => {
+  userAPI.get('/profile')
+  .then((res) => {
+    setUser(res.data)
+  })
+  .catch((err) => {
+    console.log(err)
+  })
+})
 
   const handlePayNow = () => {
     // Validation based on payment method
@@ -113,94 +123,188 @@ export default function PaymentCheckout() {
     }
 
     // if all validations pass
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      toast.success("Payment successful! Your order has been placed.", {
+    if (!user?.address) {
+      toast.error("Please add a delivery address in your profile.", {
         position: "top-center",
         style: {
-          background: "#e6ffed",
-          color: "#1a7f37",
+          background: "#ffe6e6",
+          color: "#b91c1c",
           fontWeight: "600",
         },
       });
-    }, 2000);
+      return;
+    }
 
+    setProcessing(true);
+
+    // Call checkout API and wait for response
     cartAPI
       .post("/checkout", {
-        deliveryAddress: "123 Main St, Springfield", // Placeholder address
+        deliveryAddress: user.address, 
+        paymentMethod: paymentMethod,
       })
       .then((response) => {
         console.log("Checkout response:", response.data);
-      }).catch((error) => {
+        
+        const orderId = response.data?.order?._id;
+        
+        // Show success message
+        toast.success("Payment successful! Your order has been placed.", {
+          position: "top-center",
+          style: {
+            background: "#e6ffed",
+            color: "#1a7f37",
+            fontWeight: "600",
+          },
+          duration: 3000,
+        });
+
+        // Clear cart state
+        setCart(null);
+
+        // Redirect to track order page with order ID, or orders page if no ID
+        if (orderId) {
+          setTimeout(() => {
+            navigator(`/track/${orderId}`);
+          }, 1500);
+        } else {
+          setTimeout(() => {
+            navigator("/myOrders");
+          }, 1500);
+        }
+      })
+      .catch((error) => {
         console.error("Error during checkout:", error);
+        setProcessing(false);
+        
+        const errorMessage = error.response?.data?.message || "Failed to place order. Please try again.";
+        toast.error(errorMessage, {
+          position: "top-center",
+          style: {
+            background: "#ffe6e6",
+            color: "#b91c1c",
+            fontWeight: "600",
+          },
+          duration: 4000,
+        });
       });
-
-    // Redirect to home after payment
-    setTimeout(() => {
-      navigator("/");
-    }, 2500);
-
   };
 
 
   useEffect(() => {
-    // Fetch cart data from API 
-    cartAPI.get('/').then(response => {
-      setCart(response.data);
-    }).catch(error => {
-      console.error("Error fetching cart data:", error);
-    });
-  },[]);
+    // Fetch cart data from API
+    cartAPI
+      .get("/")
+      .then((response) => {
+        setCart(response?.data || null);
+      })
+      .catch((error) => {
+        console.error("Error fetching cart data:", error);
+        setCart(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
   // default to credit card on load page
   useEffect(() => {
     setPaymentMethod("creditCard");
   }, []);
-  console.log("cart items:", cart.items);
 
-  let totalAmount =  (cart.items?.reduce((total, item) => total + item.food.price * item.quantity, 0))?.toFixed(2) || 0;
-  let amountAfterTax = (totalAmount * 1.05).toFixed(2) + 5; // including 5$ delivery fee
+  console.log("cart items:", cart?.items);
+
+  // Safe calculations with null checks
+  let totalAmount =
+    cart?.items?.reduce((total, item) => {
+      const price = item?.food?.price || 0;
+      const quantity = item?.quantity || 0;
+      return total + price * quantity;
+    }, 0) || 0;
+
+  let amountAfterTax = (totalAmount * 1.05).toFixed(2);
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fffbf5] dark:bg-[#0b1120] flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-orange-500 dark:border-orange-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">
+            Loading checkout...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty cart check
+  if (!cart || !cart.items || cart.items.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#fffbf5] dark:bg-[#0b1120] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-xl text-gray-600 dark:text-gray-300 mb-4">
+            Your cart is empty
+          </p>
+          <button
+            onClick={() => navigator("/")}
+            className="px-6 py-3 bg-orange-500 dark:bg-orange-600 text-white rounded-lg hover:bg-orange-600 dark:hover:bg-orange-700 transition-colors"
+          >
+            Go to Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#fffbf5] flex items-center justify-center p-4 sm:p-6 lg:p-8 font-poppins">
-      <div className="max-w-4xl w-full bg-white rounded-xl shadow-lg p-6 sm:p-8 flex flex-col lg:flex-row gap-8">
+    <div className="min-h-screen bg-[#fffbf5] dark:bg-[#0b1120] flex items-center justify-center p-4 sm:p-6 lg:p-8 font-poppins">
+      <div className="max-w-4xl w-full bg-white dark:bg-[#071018] rounded-xl shadow-lg dark:shadow-[0_12px_40px_rgba(2,_6,_23,_0.6)] p-6 sm:p-8 flex flex-col lg:flex-row gap-8">
         {/* ----- Order Summary Column ----- */}
         <div className="lg:w-1/2 space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-4">
-            <button onClick={()=>{navigator('/')}}>
-              <ArrowLeft/>
-                  </button>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-4">
+            <button
+              onClick={() => navigator("/")}
+              className="text-gray-700 dark:text-gray-200"
+            >
+              <ArrowLeft />
+            </button>
             Payment Checkout
           </h2>
 
-          <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+          <div className="bg-gray-50 dark:bg-[#08121a] p-4 rounded-lg shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">
               Order Summary
             </h3>
-            <ul className="space-y-2 text-gray-600">
-              {
-                 cart.items?.map((item) => {
+            <ul className="space-y-2 text-gray-600 dark:text-gray-300">
+              {cart.items
+                .filter((item) => item?.food)
+                .map((item) => {
                   return (
-                    <li key={item._id} className="flex justify-between">
-                      <span>{item.food.name} x {item.quantity}</span>
-                      <span>${item.food.price}</span>
+                    <li
+                      key={item?._id || Math.random()}
+                      className="flex justify-between"
+                    >
+                      <span>
+                        {item?.food?.name || "Unknown"} x {item?.quantity || 0}
+                      </span>
+                      <span className="dark:text-gray-200">
+                        ${(item?.food?.price || 0).toFixed(2)}
+                      </span>
                     </li>
                   );
-                })
-              }
+                })}
 
-              <li className="flex justify-between text-xl font-bold text-orange-600 pt-2 border-t-2 border-orange-200">
+              <li className="flex justify-between text-xl font-bold text-orange-600 dark:text-orange-400 pt-2 border-t-2 border-orange-200 dark:border-orange-700">
                 <span>Total</span>
-                <span>$
-                  {
-                    // ======================================
-                    amountAfterTax
-                  }</span>
+                <span>${amountAfterTax}</span>
               </li>
             </ul>
           </div>
+
           {/* ----- Payment Method Selection ----- */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-3">
               Payment Method
             </h3>
             <div className="space-y-3">
@@ -213,8 +317,8 @@ export default function PaymentCheckout() {
                   key={method.value}
                   className={`payment-method-label flex items-center p-3 rounded-lg shadow-sm cursor-pointer border ${
                     paymentMethod === method.value
-                      ? "border-orange-200 bg-orange-50"
-                      : "border-gray-200 bg-white"
+                      ? "border-orange-200 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-600"
+                      : "border-gray-200 bg-white dark:bg-[#071018] dark:border-[#25313a]"
                   }`}
                 >
                   <input
@@ -223,9 +327,10 @@ export default function PaymentCheckout() {
                     value={method.value}
                     checked={paymentMethod === method.value}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="form-radio h-3 w-3 text-primary border-gray-300 focus:ring-primary focus:ring-offset-1 transition-all duration-200"
+                    className="form-radio h-3 w-3 text-orange-600 accent-orange-600 border-gray-300 focus:ring-orange-600 focus:ring-offset-1 transition-all duration-200"
                   />
-                  <span className="ml-3 text-gray-800 font-medium">
+
+                  <span className="ml-3 text-gray-800 dark:text-gray-100 font-medium">
                     {method.label}
                   </span>
                 </label>
@@ -241,7 +346,7 @@ export default function PaymentCheckout() {
             <div id="creditCardSection">
               <div className="flex justify-center mb-6">
                 <div
-                  className="card-preview relative w-[300px] h-[180px] rounded-[15px] text-white shadow-lg transition-transform duration-700"
+                  className="card-preview relative w-full max-w-[300px] h-[180px] rounded-[15px] text-white shadow-lg transition-transform duration-700"
                   style={{
                     background:
                       "linear-gradient(135deg, #ff7043 20%, #ffb74d 100%)",
@@ -292,10 +397,11 @@ export default function PaymentCheckout() {
                   </div>
                 </div>
               </div>
+
               {/* Card Form */}
-              <div className="bg-gray-50 p-6 rounded-lg shadow-sm space-y-4">
+              <div className="bg-gray-50 dark:bg-[#071018] p-6 rounded-lg shadow-sm space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                     Card Number
                   </label>
                   <input
@@ -308,12 +414,14 @@ export default function PaymentCheckout() {
                     }}
                     placeholder="XXXX XXXX XXXX XXXX"
                     maxLength={19}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
+                    className="mt-1 block w-full rounded-md border-gray-300 
+                 dark:border-[#25313a] dark:bg-[#0d1a26] dark:text-gray-100 
+                 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                     Card Holder Name
                   </label>
                   <input
@@ -323,13 +431,15 @@ export default function PaymentCheckout() {
                       setCard({ ...card, holder: e.target.value.toUpperCase() })
                     }
                     placeholder="FULL NAME"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
+                    className="mt-1 block w-full rounded-md border-gray-300 
+                 dark:border-[#25313a] dark:bg-[#0d1a26] dark:text-gray-100 
+                 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
                   />
                 </div>
 
                 <div className="flex gap-4">
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                       Expiry Date
                     </label>
                     <input
@@ -343,11 +453,14 @@ export default function PaymentCheckout() {
                       }}
                       placeholder="MM/YY"
                       maxLength={5}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 
+                   dark:border-[#25313a] dark:bg-[#0d1a26] dark:text-gray-100 
+                   shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
                     />
                   </div>
+
                   <div className="flex-1">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                       CVV
                     </label>
                     <input
@@ -360,7 +473,9 @@ export default function PaymentCheckout() {
                       onBlur={() => setShowBack(false)}
                       placeholder="XXX"
                       maxLength={3}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
+                      className="mt-1 block w-full rounded-md border-gray-300 
+                   dark:border-[#25313a] dark:bg-[#0d1a26] dark:text-gray-100 
+                   shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
                     />
                   </div>
                 </div>
@@ -370,7 +485,7 @@ export default function PaymentCheckout() {
 
           {/* Cash Section */}
           {paymentMethod === "cash" && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm text-center">
+            <div className="bg-gray-50 dark:bg-[#071018] p-6 rounded-lg shadow-sm text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-16 w-16 text-green-500 mx-auto mb-4"
@@ -385,38 +500,55 @@ export default function PaymentCheckout() {
                   d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
                 />
               </svg>
-              <h3 className="text-xl font-bold text-gray-800">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100">
                 Cash on Delivery
               </h3>
-              <p className="text-gray-600 mt-2">
+              <p className="text-gray-600 dark:text-gray-300 mt-2">
                 Please have the total amount of{" "}
-                <strong className="text-orange-600">$43.00</strong> ready to pay
-                the delivery agent.
+                <strong className="text-orange-600 dark:text-orange-400">
+                  ${amountAfterTax}
+                </strong>{" "}
+                ready to pay the delivery agent.
               </p>
             </div>
           )}
 
           {/* Online Wallet Section */}
           {paymentMethod === "onlineWallet" && (
-            <div className="bg-gray-50 p-6 rounded-lg shadow-sm">
-              <h3 className="text-xl font-bold text-gray-800 mb-4">
+            <div className="bg-gray-50 dark:bg-[#071018] p-6 rounded-lg shadow-sm">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-gray-100 mb-4">
                 Choose Your E-Wallet
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                 {[
-                  { name: "Vodafone Cash", img: "/public/payment images/vodafoneCash.png" },
-                  { name: "Orange Cash", img: "/public/payment images/Orange_Money-Logo.wine.svg" },
-                  { name: "Etisalat Cash", img: "/public/payment images/etsalatCashLogo.png" },
-                  { name: "We Pay", img: "/public/payment images/wePayLogo.png" },
-                  { name: "Fawry", img: "/public/payment images/fawryLogo.png" },
+                  {
+                    name: "Vodafone Cash",
+                    img: "/public/payment images/vodafoneCash.png",
+                  },
+                  {
+                    name: "Orange Cash",
+                    img: "/public/payment images/Orange_Money-Logo.wine.svg",
+                  },
+                  {
+                    name: "Etisalat Cash",
+                    img: "/public/payment images/etsalatCashLogo.png",
+                  },
+                  {
+                    name: "We Pay",
+                    img: "/public/payment images/wePayLogo.png",
+                  },
+                  {
+                    name: "Fawry",
+                    img: "/public/payment images/fawryLogo.png",
+                  },
                 ].map((wallet) => (
                   <button
                     key={wallet.name}
                     onClick={() => setWalletSelected(wallet.name)}
                     className={`wallet-btn border-2 p-3 rounded-lg text-sm font-semibold flex flex-col items-center justify-center transition-all ${
                       walletSelected === wallet.name
-                        ? "border-orange-600 bg-orange-50 shadow-[0_0_0_2px_#f97316]"
-                        : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50"
+                        ? "border-orange-600 bg-orange-50 shadow-[0_0_0_2px_#f97316] dark:bg-orange-900/10 dark:border-orange-600"
+                        : "border-gray-200 bg-white hover:border-orange-300 hover:bg-orange-50 dark:bg-[#08121a] dark:border-[#25313a] dark:hover:border-orange-400 dark:hover:bg-orange-900/10"
                     }`}
                   >
                     {/* Wallet Image */}
@@ -426,14 +558,14 @@ export default function PaymentCheckout() {
                       className="w-13 h-12 object-contain mb-2"
                     />
                     {/* Wallet Name */}
-                    <span>{wallet.name}</span>
+                    <span className="dark:text-gray-100">{wallet.name}</span>
                   </button>
                 ))}
               </div>
 
               {walletSelected && (
                 <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                     Enter your {walletSelected} number
                   </label>
                   <input
@@ -441,7 +573,9 @@ export default function PaymentCheckout() {
                     value={walletNumber}
                     onChange={(e) => setWalletNumber(e.target.value)}
                     placeholder="01X XXXX XXXX"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
+                    className="mt-1 block w-full rounded-md border-gray-300 
+             dark:border-[#25313a] dark:bg-[#0d1a26] dark:text-gray-100 
+             shadow-sm focus:border-orange-500 focus:ring-orange-500 p-2"
                   />
                 </div>
               )}
@@ -454,8 +588,8 @@ export default function PaymentCheckout() {
             disabled={processing}
             className={`w-full py-3 px-4 font-semibold rounded-lg shadow-md text-white transition-all ${
               processing
-                ? "bg-orange-400 cursor-not-allowed"
-                : "bg-orange-600 hover:bg-orange-700"
+                ? "bg-orange-400 cursor-not-allowed dark:bg-orange-500"
+                : "bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700"
             }`}
           >
             {processing
