@@ -23,7 +23,7 @@ app.use(cookieParser()); // Middleware to parse cookies
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: "http://localhost:5173", // Allow requests from this origin
     credentials: true,
   }),
 );
