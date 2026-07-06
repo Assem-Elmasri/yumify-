@@ -138,8 +138,10 @@ const Profile = () => {
               onClick={() => {
                 if (userData.role === "customer") {
                   navigator("/");
-                } else {
+                } else if (userData.role === "owner") {
                   navigator("/owner/dashboard");
+                } else if (userData.role === "admin") {
+                  navigator("/admin/dashboard");
                 }
               }}
               aria-label="Go back"
