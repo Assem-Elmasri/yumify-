@@ -1172,7 +1172,7 @@ Main Contributions:
 
 ---
 
-### Mohamed (DevOps Engineer)
+### Mohamed Ramadan (DevOps Engineer)
 
 - Managed the production deployment on AWS EC2.
 - Configured Nginx as a secure reverse proxy for the application.
